@@ -26,33 +26,36 @@ export function Sidebar({ className }: SidebarProps) {
     <div
       data-sidebar
       className={cn(
-        "bg-sidebar border-r border-sidebar-border transition-all duration-300",
-        collapsed ? "w-16" : "w-64",
+        "bg-sidebar border-r border-sidebar-border transition-all duration-300 flex-shrink-0",
+        collapsed ? "w-20" : "w-80",
         className,
       )}
     >
       <div className="flex h-full flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
+        {/* Header - More spacious */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-sidebar-border">
           {!collapsed && (
-            <div className="flex items-center gap-3">
-              <div className="bg-white rounded-lg p-2 flex items-center justify-center">
+            <div className="flex items-center gap-4">
+              <div className="bg-white rounded-xl p-3 flex items-center justify-center">
                 <img 
-                  src="/esri-3-logo.png" 
+                  src="/Esri.png" 
                   alt="Esri Logo" 
-                  className="h-8 w-auto"
+                  className="h-10 w-auto"
                 />
               </div>
-              
+              <div className="flex flex-col">
+                <h1 className="text-lg font-bold text-sidebar-foreground">Esri Rwanda</h1>
+                <p className="text-xs text-sidebar-foreground/70 leading-tight">Quotation Management System</p>
+              </div>
             </div>
           )}
           {collapsed && (
             <div className="flex justify-center w-full">
-              <div className="bg-white rounded-lg p-2 flex items-center justify-center">
+              <div className="bg-white rounded-xl p-3 flex items-center justify-center">
                 <img 
-                  src="/esri-3-logo.png" 
+                  src="/Esri2.png" 
                   alt="Esri Logo" 
-                  className="h-6 w-auto"
+                  className="h-8 w-auto"
                 />
               </div>
             </div>
@@ -61,15 +64,15 @@ export function Sidebar({ className }: SidebarProps) {
             variant="ghost"
             size="sm"
             onClick={() => setCollapsed(!collapsed)}
-            className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="h-9 w-9 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </Button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4">
-          <ul className="space-y-2">
+        {/* Navigation - More generous spacing */}
+        <nav className="flex-1 px-6 py-6">
+          <ul className="space-y-3">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href
               return (
@@ -78,12 +81,13 @@ export function Sidebar({ className }: SidebarProps) {
                     to={item.href}
                     data-sidebar-item
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                      "flex items-center gap-4 rounded-xl px-4 py-3 text-base font-medium transition-colors",
                       "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                       isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground",
                     )}
+                    title={collapsed ? item.name : undefined}
                   >
-                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    <item.icon className="h-5 w-5 flex-shrink-0" />
                     {!collapsed && <span>{item.name}</span>}
                   </Link>
                 </li>
