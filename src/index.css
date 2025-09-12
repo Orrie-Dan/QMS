@@ -1,0 +1,138 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+:root {
+  /* esri Rwanda brand colors - vibrant blue with white text */
+  --background: 0 0% 100%; /* #ffffff */
+  --foreground: 222.2 84% 4.9%; /* #0f172a */
+  --card: 0 0% 100%; /* #ffffff */
+  --card-foreground: 222.2 84% 4.9%; /* #0f172a */
+  --popover: 0 0% 100%; /* #ffffff */
+  --popover-foreground: 222.2 84% 4.9%; /* #0f172a */
+  --primary: 210 100% 70%; /* lighter esri blue - softer medium blue */
+  --primary-foreground: 210 40% 98%; /* #f8fafc */
+  --secondary: 210 40% 96%; /* #f1f5f9 */
+  --secondary-foreground: 222.2 84% 4.9%; /* #0f172a */
+  --muted: 210 40% 96%; /* #f1f5f9 */
+  --muted-foreground: 215.4 16.3% 46.9%; /* #64748b */
+  --accent: 210 100% 70%; /* lighter esri blue accent */
+  --accent-foreground: 210 40% 98%; /* #f8fafc */
+  --destructive: 0 84.2% 60.2%; /* #ef4444 */
+  --destructive-foreground: 210 40% 98%; /* #f8fafc */
+  --border: 214.3 31.8% 91.4%; /* #e2e8f0 */
+  --input: 214.3 31.8% 91.4%; /* #e2e8f0 */
+  --ring: 210 100% 70%; /* lighter esri blue */
+  --chart-1: 210 100% 70%; /* lighter esri blue */
+  --chart-2: 200 100% 50%; /* complementary blue */
+  --chart-3: 142.1 76.2% 36.3%; /* #22c55e */
+  --chart-4: 47.9 95.8% 53.1%; /* #fbbf24 */
+  --chart-5: 0 84.2% 60.2%; /* #ef4444 */
+  --radius: 0.5rem;
+  --sidebar: 0 0% 98%; /* light gray sidebar */
+  --sidebar-foreground: 222.2 84% 4.9%; /* dark text */
+  --sidebar-primary: 222.2 84% 4.9%; /* dark */
+  --sidebar-primary-foreground: 0 0% 98%; /* light */
+  --sidebar-accent: 210 40% 96%; /* light gray for hover */
+  --sidebar-accent-foreground: 222.2 84% 4.9%; /* dark text */
+  --sidebar-border: 214.3 31.8% 91.4%; /* light border */
+  --sidebar-ring: 221.2 83.2% 53.3%; /* esri blue for focus */
+}
+
+.dark {
+  --background: 222.2 84% 4.9%; /* darker background */
+  --foreground: 210 40% 98%; /* white text */
+  --card: 222.2 84% 4.9%; /* dark card */
+  --card-foreground: 210 40% 98%; /* white text */
+  --popover: 222.2 84% 4.9%; /* dark popover */
+  --popover-foreground: 210 40% 98%; /* white text */
+  --primary: 210 100% 75%; /* lighter esri blue for dark mode */
+  --primary-foreground: 222.2 84% 4.9%; /* dark text */
+  --secondary: 217.2 32.6% 17.5%; /* darker esri blue */
+  --secondary-foreground: 210 40% 98%; /* white */
+  --muted: 217.2 32.6% 17.5%; /* dark muted */
+  --muted-foreground: 215 20.2% 65.1%; /* light gray */
+  --accent: 210 100% 75%; /* lighter esri blue accent */
+  --accent-foreground: 222.2 84% 4.9%; /* dark text */
+  --destructive: 0 62.8% 30.6%; /* red */
+  --destructive-foreground: 210 40% 98%; /* white */
+  --border: 217.2 32.6% 17.5%; /* dark border */
+  --input: 217.2 32.6% 17.5%; /* dark input */
+  --ring: 210 100% 75%; /* lighter esri blue */
+  --chart-1: 210 100% 75%; /* lighter esri blue */
+  --chart-2: 200 100% 50%; /* complementary blue */
+  --chart-3: 142.1 76.2% 36.3%; /* green */
+  --chart-4: 47.9 95.8% 53.1%; /* yellow */
+  --chart-5: 0 84.2% 60.2%; /* red */
+  --sidebar: 217.2 32.6% 17.5%; /* dark gray sidebar */
+  --sidebar-foreground: 210 40% 98%; /* light text */
+  --sidebar-primary: 210 40% 98%; /* light */
+  --sidebar-primary-foreground: 217.2 32.6% 17.5%; /* dark */
+  --sidebar-accent: 217.2 32.6% 25%; /* slightly lighter gray for hover */
+  --sidebar-accent-foreground: 210 40% 98%; /* light text */
+  --sidebar-border: 217.2 32.6% 25%; /* dark border */
+  --sidebar-ring: 210 100% 75%; /* lighter esri blue for focus */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Additional esri brand styling */
+.bg-primary {
+  background-color: hsl(var(--primary)) !important;
+}
+
+.text-primary {
+  color: hsl(var(--primary)) !important;
+}
+
+.bg-sidebar {
+  background-color: hsl(var(--sidebar));
+}
+
+.text-sidebar-foreground {
+  color: hsl(var(--sidebar-foreground)) !important;
+}
+
+.bg-sidebar-accent {
+  background-color: hsl(var(--sidebar-accent)) !important;
+}
+
+.text-sidebar-accent-foreground {
+  color: hsl(var(--sidebar-accent-foreground)) !important;
+}
+
+.border-sidebar-border {
+  border-color: hsl(var(--sidebar-border)) !important;
+}
+
+/* Force esri brand colors */
+.esri-blue {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+.esri-blue-text {
+  color: #3b82f6 !important;
+}
+
+/* Ensure proper styling for all components */
+[data-sidebar] {
+  background-color: hsl(var(--sidebar));
+  color: hsl(var(--sidebar-foreground));
+}
+
+[data-sidebar] [data-sidebar-item] {
+  color: hsl(var(--sidebar-foreground));
+}
+
+[data-sidebar] [data-sidebar-item]:hover {
+  background-color: hsl(var(--sidebar-accent));
+  color: hsl(var(--sidebar-accent-foreground));
+}
