@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { BarChart3, Download, TrendingUp, Users, FileText, DollarSign } from "lucide-react"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart"
 import { PieChart, Pie, Cell } from "recharts"
+import { generateReportsPDF } from "../lib/pdfUtils"
 
 export default function ReportsPage() {
   const { quotations, clients } = useStore()
@@ -61,6 +62,11 @@ export default function ReportsPage() {
     }
   }).sort((a, b) => b.totalValue - a.totalValue).slice(0, 5)
 
+  // Export report function
+  const handleExportReport = () => {
+    generateReportsPDF(quotations, clients)
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -69,7 +75,7 @@ export default function ReportsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
           <p className="text-gray-600">Insights into your quotation business</p>
         </div>
-        <Button className="flex items-center">
+        <Button className="flex items-center" onClick={handleExportReport}>
           <Download className="h-4 w-4 mr-2" />
           Export Report
         </Button>

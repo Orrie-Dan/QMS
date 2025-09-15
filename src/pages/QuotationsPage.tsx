@@ -13,6 +13,8 @@ import { Plus, Search, Eye, Edit, Trash2, Download } from "lucide-react"
 export default function QuotationsPage() {
   const quotations = useStore((state) => state.quotations)
   const deleteQuotation = useStore((state) => state.deleteQuotation)
+  const companySettings = useStore((state) => state.companySettings)
+  const clients = useStore((state) => state.clients)
   const [searchTerm, setSearchTerm] = useState("")
 
   const filteredQuotations = quotations.filter(
@@ -37,7 +39,8 @@ export default function QuotationsPage() {
   }
 
   const handleDownload = (quotation: Quotation) => {
-    generateQuotationPDF(quotation)
+    const client = clients.find((c) => c.id === quotation.clientId)
+    generateQuotationPDF(quotation, companySettings, client)
   }
 
   return (

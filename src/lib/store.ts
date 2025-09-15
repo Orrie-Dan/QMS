@@ -45,10 +45,23 @@ export interface User {
   isAuthenticated: boolean
 }
 
+export interface CompanySettings {
+  name: string
+  address: string
+  phone: string
+  email: string
+  website: string
+  logo: string
+  taxRate: number
+  currency: string
+  preparedBy: string
+}
+
 interface AppState {
   user: User | null
   quotations: Quotation[]
   clients: Client[]
+  companySettings: CompanySettings
 
   // Auth actions
   login: (email: string, password: string) => Promise<boolean>
@@ -63,6 +76,9 @@ interface AppState {
   addClient: (client: Omit<Client, "id" | "createdAt">) => void
   updateClient: (id: string, updates: Partial<Client>) => void
   deleteClient: (id: string) => void
+
+  // Company settings actions
+  updateCompanySettings: (settings: Partial<CompanySettings>) => void
 }
 
 // Mock data
@@ -145,12 +161,26 @@ const mockClients: Client[] = [
   },
 ]
 
+// Esri Rwanda company settings
+const defaultCompanySettings: CompanySettings = {
+  name: "Esri Rwanda",
+  address: "KG 7 Ave, Kigali, Rwanda",
+  phone: "+250 788 123 456",
+  email: "info@esri.rw",
+  website: "www.esri.rw",
+  logo: "/Esri.png",
+  taxRate: 18,
+  currency: "RWF",
+  preparedBy: "Sales Team"
+}
+
 export const useStore = create<AppState>()(
   persist(
     (set) => ({
       user: null,
       quotations: mockQuotations,
       clients: mockClients,
+      companySettings: defaultCompanySettings,
 
       login: async (email: string, password: string) => {
         // Mock authentication
@@ -219,6 +249,12 @@ export const useStore = create<AppState>()(
       deleteClient: (id) => {
         set((state) => ({
           clients: state.clients.filter((c) => c.id !== id),
+        }))
+      },
+
+      updateCompanySettings: (settings) => {
+        set((state) => ({
+          companySettings: { ...state.companySettings, ...settings },
         }))
       },
     }),

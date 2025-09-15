@@ -11,7 +11,7 @@ import { ArrowLeft, Edit, Trash2, Send, Download, Loader2 } from "lucide-react"
 export default function QuotationDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { quotations, deleteQuotation } = useStore()
+  const { quotations, deleteQuotation, companySettings, clients } = useStore()
   const [isLoading, setIsLoading] = useState({
     send: false,
     download: false,
@@ -26,6 +26,7 @@ export default function QuotationDetailPage() {
   })
 
   const quotation = quotations.find((q) => q.id === id)
+  const client = quotation ? clients.find((c) => c.id === quotation.clientId) : undefined
 
   if (!quotation) {
     return (
@@ -97,7 +98,7 @@ export default function QuotationDetailPage() {
       await new Promise(resolve => setTimeout(resolve, 500))
       
       // Generate and download PDF
-      generateQuotationPDF(quotation)
+      generateQuotationPDF(quotation, companySettings, client)
     } catch (error) {
       console.error("Error downloading quotation:", error)
       alert("Failed to download quotation. Please try again.")
