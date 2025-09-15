@@ -9,11 +9,23 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import Link from "next/link"
 
 const statusColors = {
-  draft: "bg-muted text-muted-foreground",
-  sent: "bg-chart-4/20 text-chart-4",
-  accepted: "bg-chart-3/20 text-chart-3",
-  rejected: "bg-destructive/20 text-destructive",
-}
+  draft: {
+    chip: "bg-muted text-muted-foreground",
+    stripe: "border-l-4 border-indigo-400",
+  },
+  sent: {
+    chip: "bg-amber-500/20 text-amber-600",
+    stripe: "border-l-4 border-amber-400",
+  },
+  accepted: {
+    chip: "bg-emerald-500/20 text-emerald-600",
+    stripe: "border-l-4 border-emerald-400",
+  },
+  rejected: {
+    chip: "bg-destructive/20 text-destructive",
+    stripe: "border-l-4 border-destructive",
+  },
+} as const
 
 export function RecentQuotations() {
   const quotations = useStore((state) => state.quotations)
@@ -41,46 +53,49 @@ export function RecentQuotations() {
               </Button>
             </div>
           ) : (
-            recentQuotations.map((quotation) => (
-              <div key={quotation.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h4 className="font-medium">{quotation.quotationNumber}</h4>
-                    <Badge className={statusColors[quotation.status]}>
-                      {quotation.status.charAt(0).toUpperCase() + quotation.status.slice(1)}
-                    </Badge>
+            recentQuotations.map((quotation) => {
+              const styles = statusColors[quotation.status as keyof typeof statusColors]
+              return (
+                <div key={quotation.id} className={`flex items-center justify-between p-4 border rounded-lg bg-white/50 backdrop-blur-sm ${styles.stripe}`}>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h4 className="font-medium">{quotation.quotationNumber}</h4>
+                      <Badge className={styles.chip}>
+                        {quotation.status.charAt(0).toUpperCase() + quotation.status.slice(1)}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-1">{quotation.clientName}</p>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span>${quotation.total.toLocaleString()}</span>
+                      <span>•</span>
+                      <span>{new Date(quotation.updatedAt).toLocaleDateString()}</span>
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-1">{quotation.clientName}</p>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>${quotation.total.toLocaleString()}</span>
-                    <span>•</span>
-                    <span>{new Date(quotation.updatedAt).toLocaleDateString()}</span>
-                  </div>
-                </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href={`/quotations/${quotation.id}`}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        View
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href={`/quotations/${quotation.id}/edit`}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            ))
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link href={`/quotations/${quotation.id}`}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          View
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href={`/quotations/${quotation.id}/edit`}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )
+            })
           )}
         </div>
       </CardContent>

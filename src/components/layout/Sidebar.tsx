@@ -26,17 +26,17 @@ export function Sidebar({ className }: SidebarProps) {
     <div
       data-sidebar
       className={cn(
-        "bg-sidebar border-r border-sidebar-border transition-all duration-300 flex-shrink-0",
+        "bg-gradient-to-b from-[#0b1730] via-[#0f2c6d] to-[#123a8c] border-r border-white/10 transition-all duration-300 flex-shrink-0 text-white",
         collapsed ? "w-20" : "w-80",
         className,
       )}
     >
       <div className="flex h-full flex-col">
         {/* Header - More spacious */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-sidebar-border">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           {!collapsed && (
             <div className="flex items-center gap-4">
-              <div className="bg-white rounded-xl p-3 flex items-center justify-center">
+              <div className="bg-white/10 rounded-xl p-3 flex items-center justify-center">
                 <img 
                   src="/Esri.png" 
                   alt="Esri Logo" 
@@ -44,14 +44,14 @@ export function Sidebar({ className }: SidebarProps) {
                 />
               </div>
               <div className="flex flex-col">
-                <h1 className="text-lg font-bold text-sidebar-foreground">Esri Rwanda</h1>
-                <p className="text-xs text-sidebar-foreground/70 leading-tight">Quotation Management System</p>
+                <h1 className="text-lg font-bold text-white">Esri Rwanda</h1>
+                <p className="text-xs text-white/70 leading-tight">Quotation Management System</p>
               </div>
             </div>
           )}
           {collapsed && (
             <div className="flex justify-center w-full">
-              <div className="bg-white rounded-xl p-3 flex items-center justify-center">
+              <div className="bg-white/10 rounded-xl p-3 flex items-center justify-center">
                 <img 
                   src="/Esri2.png" 
                   alt="Esri Logo" 
@@ -64,7 +64,7 @@ export function Sidebar({ className }: SidebarProps) {
             variant="ghost"
             size="sm"
             onClick={() => setCollapsed(!collapsed)}
-            className="h-9 w-9 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="h-9 w-9 text-white hover:bg-white/10 hover:text-white"
           >
             {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </Button>
@@ -82,12 +82,12 @@ export function Sidebar({ className }: SidebarProps) {
                     data-sidebar-item
                     className={cn(
                       "flex items-center gap-4 rounded-xl px-4 py-3 text-base font-medium transition-colors",
-                      "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                      isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground",
+                      "hover:bg-[#60A5FA]/20",
+                      isActive ? "bg-[#60A5FA]/30 font-semibold" : "",
                     )}
                     title={collapsed ? item.name : undefined}
                   >
-                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                    <item.icon className="h-5 w-5 flex-shrink-0 text-white" />
                     {!collapsed && <span>{item.name}</span>}
                   </Link>
                 </li>

@@ -1,236 +1,168 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useRef, useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
-import { Settings, User, Bell, Shield, Palette } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Upload, Save, Lock, User } from "lucide-react"
+import { useStore } from "../lib/store"
 
 export default function SettingsPage() {
+  const user = useStore((s) => s.user)
+  const updateUserProfile = useStore((s) => s.updateUserProfile)
+  const updateUserPassword = useStore((s) => s.updateUserPassword)
+
+  const [firstName, setFirstName] = useState(user?.name?.split(" ")[0] || "")
+  const [middleName, setMiddleName] = useState("")
+  const [lastName, setLastName] = useState(user?.name?.split(" ").slice(1).join(" ") || "")
+  const [phoneCountryCode, setPhoneCountryCode] = useState(user?.phoneCountryCode || "+250")
+  const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "")
+  const [photoUrl, setPhotoUrl] = useState(user?.photoUrl || "")
+
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  const handleUploadClick = () => fileInputRef.current?.click()
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const url = URL.createObjectURL(file)
+    setPhotoUrl(url)
+  }
+
+  const handleSaveProfile = () => {
+    const name = [firstName, middleName, lastName].filter(Boolean).join(" ")
+    updateUserProfile({ name, photoUrl, phoneCountryCode, phoneNumber })
+    alert("Profile saved")
+  }
+
+  const handleUpdatePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      alert("New password and confirmation do not match")
+      return
+    }
+    const ok = await updateUserPassword(currentPassword, newPassword)
+    if (!ok) {
+      alert("Current password is incorrect")
+    } else {
+      alert("Password updated")
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+    }
+  }
+
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Settings className="h-8 w-8 text-gray-600" />
+      <div className="flex items-center space-x-3">
+        <User className="h-6 w-6 text-gray-600" />
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600">Manage your account and application preferences</p>
+          <p className="text-gray-600">Manage your profile and security</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Settings Navigation */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardContent className="p-4">
-              <nav className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start">
-                  <User className="h-4 w-4 mr-2" />
-                  Profile
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  <Bell className="h-4 w-4 mr-2" />
-                  Notifications
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  <Shield className="h-4 w-4 mr-2" />
-                  Security
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  <Palette className="h-4 w-4 mr-2" />
-                  Appearance
-                </Button>
-              </nav>
-            </CardContent>
-          </Card>
-        </div>
+      <Tabs defaultValue="profile" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+        </TabsList>
 
-        {/* Settings Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Profile Settings */}
+        <TabsContent value="profile">
           <Card>
             <CardHeader>
               <CardTitle>Profile Information</CardTitle>
-              <CardDescription>
-                Update your personal information and contact details
-              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" defaultValue="Admin User" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" type="email" defaultValue="admin@qms.com" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company</Label>
-                  <Input id="company" defaultValue="QMS Inc." />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" defaultValue="+1 (555) 123-4567" />
-                </div>
-              </div>
+              {/* Photo */}
               <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  placeholder="Tell us about yourself..."
-                  rows={3}
-                />
+                <Label>Profile Picture</Label>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center">
+                    {photoUrl ? (
+                      <img src={photoUrl} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-sm text-gray-500">No photo</span>
+                    )}
+                  </div>
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                  <Button variant="outline" onClick={handleUploadClick}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Photo
+                  </Button>
+                </div>
               </div>
-              <Button>Save Changes</Button>
+
+              {/* Names */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="middleName">Middle Name (optional)</Label>
+                  <Input id="middleName" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Second Name</Label>
+                  <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="space-y-2">
+                <Label>Phone Number</Label>
+                <div className="grid grid-cols-3 gap-3 md:max-w-md">
+                  <Input placeholder="+250" value={phoneCountryCode} onChange={(e) => setPhoneCountryCode(e.target.value)} />
+                  <div className="col-span-2">
+                    <Input placeholder="7xx xxx xxx" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">Include country code, e.g., +1, +44, +250</p>
+              </div>
+
+              <Button onClick={handleSaveProfile}>
+                <Save className="mr-2 h-4 w-4" />
+                Save Profile
+              </Button>
             </CardContent>
           </Card>
+        </TabsContent>
 
-          {/* Notification Settings */}
+        <TabsContent value="security">
           <Card>
             <CardHeader>
-              <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>
-                Choose how you want to be notified about important events
-              </CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Security
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="email-notifications">Email Notifications</Label>
-                    <p className="text-sm text-gray-600">
-                      Receive notifications via email
-                    </p>
-                  </div>
-                  <Switch id="email-notifications" defaultChecked />
+            <CardContent className="space-y-6 md:max-w-3xl">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword">Current Password</Label>
+                  <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
                 </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="quotation-updates">Quotation Updates</Label>
-                    <p className="text-sm text-gray-600">
-                      Get notified when quotations are updated
-                    </p>
-                  </div>
-                  <Switch id="quotation-updates" defaultChecked />
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                 </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="client-updates">Client Updates</Label>
-                    <p className="text-sm text-gray-600">
-                      Get notified when client information changes
-                    </p>
-                  </div>
-                  <Switch id="client-updates" />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="weekly-reports">Weekly Reports</Label>
-                    <p className="text-sm text-gray-600">
-                      Receive weekly summary reports
-                    </p>
-                  </div>
-                  <Switch id="weekly-reports" defaultChecked />
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                 </div>
               </div>
+              <Button onClick={handleUpdatePassword}>
+                <Save className="mr-2 h-4 w-4" />
+                Update Password
+              </Button>
             </CardContent>
           </Card>
-
-          {/* Security Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Security</CardTitle>
-              <CardDescription>
-                Manage your account security and privacy settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="current-password">Current Password</Label>
-                  <Input id="current-password" type="password" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
-                  <Input id="new-password" type="password" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm New Password</Label>
-                  <Input id="confirm-password" type="password" />
-                </div>
-                <Button>Update Password</Button>
-              </div>
-              <Separator />
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="two-factor">Two-Factor Authentication</Label>
-                    <p className="text-sm text-gray-600">
-                      Add an extra layer of security to your account
-                    </p>
-                  </div>
-                  <Switch id="two-factor" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="session-timeout">Session Timeout</Label>
-                    <p className="text-sm text-gray-600">
-                      Automatically log out after 30 minutes of inactivity
-                    </p>
-                  </div>
-                  <Switch id="session-timeout" defaultChecked />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Appearance Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Appearance</CardTitle>
-              <CardDescription>
-                Customize the look and feel of your application
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="dark-mode">Dark Mode</Label>
-                    <p className="text-sm text-gray-600">
-                      Switch between light and dark themes
-                    </p>
-                  </div>
-                  <Switch id="dark-mode" />
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <Label htmlFor="language">Language</Label>
-                  <select className="w-full p-2 border rounded-md">
-                    <option value="en">English</option>
-                    <option value="es">Spanish</option>
-                    <option value="fr">French</option>
-                    <option value="de">German</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="timezone">Timezone</Label>
-                  <select className="w-full p-2 border rounded-md">
-                    <option value="UTC">UTC</option>
-                    <option value="EST">Eastern Time</option>
-                    <option value="PST">Pacific Time</option>
-                    <option value="GMT">Greenwich Mean Time</option>
-                  </select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

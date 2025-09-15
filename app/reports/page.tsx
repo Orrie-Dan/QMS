@@ -190,30 +190,36 @@ export default function ReportsPage() {
 
         {/* Key Metrics */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card className="shadow-sm border-t-4 border-sky-400">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Quotations</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-sky-500/10">
+                <FileText className="h-4 w-4 text-sky-500" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metrics.totalQuotations}</div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-sm border-t-4 border-emerald-400">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Value</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-emerald-500/10">
+                <DollarSign className="h-4 w-4 text-emerald-500" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${metrics.totalValue.toLocaleString()}</div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-sm border-t-4 border-amber-400">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Conversion Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <TrendingUp className="h-4 w-4 text-amber-500" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{conversionRate.toFixed(1)}%</div>
@@ -223,10 +229,12 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-sm border-t-4 border-indigo-400">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Avg. Quotation Value</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-indigo-500/10">
+                <TrendingUp className="h-4 w-4 text-indigo-500" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${averageQuotationValue.toLocaleString()}</div>
@@ -303,9 +311,9 @@ export default function ReportsPage() {
             <CardContent>
               <div className="space-y-4">
                 {clientPerformance.slice(0, 5).map((cp, index) => (
-                  <div key={cp.client.id} className="flex items-center justify-between">
+                  <div key={cp.client.id} className="flex items-center justify-between p-4 border rounded-lg bg-white/60 backdrop-blur-sm border-l-4 border-sky-400 hover:bg-sky-500/5">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center text-sm font-medium">
+                      <div className="w-8 h-8 bg-sky-500/10 rounded-full flex items-center justify-center text-sm font-medium text-sky-600">
                         {index + 1}
                       </div>
                       <div>

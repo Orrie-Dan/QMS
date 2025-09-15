@@ -6,7 +6,7 @@ import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
 import { ConfirmationDialog } from "../components/ui/confirmation-dialog"
-import { ArrowLeft, Edit, Trash2, Send, Download, Loader2 } from "lucide-react"
+import { ArrowLeft, Edit, Trash2, Send, Download, Loader2, FileText, User, CalendarDays, ReceiptText } from "lucide-react"
 
 export default function QuotationDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -60,7 +60,6 @@ export default function QuotationDetailPage() {
     if (confirmDialog.type === "delete") {
       setIsLoading(prev => ({ ...prev, delete: true }))
       try {
-        // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 1000))
         deleteQuotation(quotation.id)
         navigate("/quotations")
@@ -74,12 +73,9 @@ export default function QuotationDetailPage() {
     } else if (confirmDialog.type === "send") {
       setIsLoading(prev => ({ ...prev, send: true }))
       try {
-        // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 1500))
-        // Update quotation status to 'sent'
         const { updateQuotation } = useStore.getState()
         updateQuotation(quotation.id, { status: "sent" })
-        // In a real app, you would send an email here
         alert("Quotation sent successfully!")
       } catch (error) {
         console.error("Error sending quotation:", error)
@@ -94,10 +90,7 @@ export default function QuotationDetailPage() {
   const handleDownload = async () => {
     setIsLoading(prev => ({ ...prev, download: true }))
     try {
-      // Simulate processing delay
       await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Generate and download PDF
       generateQuotationPDF(quotation, companySettings, client)
     } catch (error) {
       console.error("Error downloading quotation:", error)
@@ -107,19 +100,11 @@ export default function QuotationDetailPage() {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "draft":
-        return "bg-gray-100 text-gray-800"
-      case "sent":
-        return "bg-blue-100 text-blue-800"
-      case "accepted":
-        return "bg-green-100 text-green-800"
-      case "rejected":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
+  const statusStyles: Record<string, string> = {
+    draft: "bg-gray-100 text-gray-800 border border-gray-200",
+    sent: "bg-sky-100 text-sky-800 border border-sky-200",
+    accepted: "bg-emerald-100 text-emerald-800 border border-emerald-200",
+    rejected: "bg-red-100 text-red-800 border border-red-200",
   }
 
   return (
@@ -142,7 +127,7 @@ export default function QuotationDetailPage() {
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <Badge className={getStatusColor(quotation.status)}>
+          <Badge className={statusStyles[quotation.status] || statusStyles.draft}>
             {quotation.status.charAt(0).toUpperCase() + quotation.status.slice(1)}
           </Badge>
           <Button variant="outline" size="sm" onClick={handleEdit}>
@@ -195,9 +180,9 @@ export default function QuotationDetailPage() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Client Information */}
-          <Card>
+          <Card className="border-t-4 border-sky-400">
             <CardHeader>
-              <CardTitle>Client Information</CardTitle>
+              <CardTitle className="flex items-center gap-2"><User className="h-4 w-4 text-sky-500" /> Client Information</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -208,9 +193,9 @@ export default function QuotationDetailPage() {
           </Card>
 
           {/* Items */}
-          <Card>
+          <Card className="border-t-4 border-indigo-400">
             <CardHeader>
-              <CardTitle>Items</CardTitle>
+              <CardTitle className="flex items-center gap-2"><ReceiptText className="h-4 w-4 text-indigo-500" /> Items</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -231,7 +216,7 @@ export default function QuotationDetailPage() {
 
           {/* Notes */}
           {quotation.notes && (
-            <Card>
+            <Card className="border-t-4 border-amber-400">
               <CardHeader>
                 <CardTitle>Notes</CardTitle>
               </CardHeader>
@@ -245,7 +230,7 @@ export default function QuotationDetailPage() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Summary */}
-          <Card>
+          <Card className="border-t-4 border-emerald-400">
             <CardHeader>
               <CardTitle>Summary</CardTitle>
             </CardHeader>
@@ -255,7 +240,7 @@ export default function QuotationDetailPage() {
                 <span>${quotation.subtotal.toFixed(2)}</span>
               </div>
               {quotation.discount > 0 && (
-                <div className="flex justify-between text-green-600">
+                <div className="flex justify-between text-emerald-600">
                   <span>Discount:</span>
                   <span>-${quotation.discount.toFixed(2)}</span>
                 </div>
@@ -264,7 +249,7 @@ export default function QuotationDetailPage() {
                 <span>Tax ({quotation.taxRate}%):</span>
                 <span>${quotation.taxAmount.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between font-bold text-lg border-t pt-3">
+              <div className="flex justify-between font-bold text-lg border-t pt-3 text-emerald-600">
                 <span>Total:</span>
                 <span>${quotation.total.toFixed(2)}</span>
               </div>
@@ -272,9 +257,9 @@ export default function QuotationDetailPage() {
           </Card>
 
           {/* Details */}
-          <Card>
+          <Card className="border-t-4 border-sky-400">
             <CardHeader>
-              <CardTitle>Details</CardTitle>
+              <CardTitle className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-sky-500" /> Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>

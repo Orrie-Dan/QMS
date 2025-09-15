@@ -32,11 +32,11 @@ export default function ClientsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Card className="shadow-sm border-t-4 border-sky-400">
           <CardContent className="p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Mail className="h-6 w-6 text-blue-600" />
+              <div className="p-2 bg-sky-500/10 rounded-lg">
+                <Mail className="h-6 w-6 text-sky-500" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Clients</p>
@@ -45,11 +45,11 @@ export default function ClientsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-t-4 border-emerald-400">
           <CardContent className="p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Phone className="h-6 w-6 text-green-600" />
+              <div className="p-2 bg-emerald-500/10 rounded-lg">
+                <Phone className="h-6 w-6 text-emerald-500" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Clients</p>
@@ -58,11 +58,11 @@ export default function ClientsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-t-4 border-indigo-400">
           <CardContent className="p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <MapPin className="h-6 w-6 text-purple-600" />
+              <div className="p-2 bg-indigo-500/10 rounded-lg">
+                <MapPin className="h-6 w-6 text-indigo-500" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Locations</p>
@@ -98,11 +98,11 @@ export default function ClientsPage() {
               {clients.map((client) => (
                 <div
                   key={client.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                  className="flex items-center justify-between p-4 border rounded-lg bg-white/60 backdrop-blur-sm border-l-4 border-sky-400 hover:bg-sky-500/5"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-600">
+                    <div className="w-10 h-10 bg-sky-500/10 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-sky-600">
                         {client.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                       </span>
                     </div>
@@ -110,19 +110,23 @@ export default function ClientsPage() {
                       <h3 className="font-medium text-gray-900">{client.name}</h3>
                       <p className="text-sm text-gray-600">{client.company}</p>
                       <div className="flex items-center space-x-4 mt-1">
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Mail className="h-4 w-4 mr-1" />
+                        <div className="flex items-center text-sm text-gray-600">
+                          <span className="p-1.5 rounded-md bg-sky-500/10 mr-1">
+                            <Mail className="h-4 w-4 text-sky-500" />
+                          </span>
                           {client.email}
                         </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Phone className="h-4 w-4 mr-1" />
+                        <div className="flex items-center text-sm text-gray-600">
+                          <span className="p-1.5 rounded-md bg-indigo-500/10 mr-1">
+                            <Phone className="h-4 w-4 text-indigo-500" />
+                          </span>
                           {client.phone}
                         </div>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge variant="outline">
+                    <Badge className="bg-indigo-50 text-indigo-700 border border-indigo-100">
                       {new Date(client.createdAt).toLocaleDateString()}
                     </Badge>
                     <Link to={`/clients/${client.id}/edit`}>

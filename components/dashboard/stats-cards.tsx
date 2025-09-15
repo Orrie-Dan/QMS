@@ -26,36 +26,40 @@ export function StatsCards() {
       title: "Total Quotations",
       value: stats.total,
       icon: FileText,
-      color: "text-chart-1",
-      bgColor: "bg-chart-1/10",
+      color: "text-sky-500",
+      bgColor: "bg-sky-500/10",
+      border: "border-t-4 border-sky-400",
     },
     {
       title: "Accepted",
       value: stats.accepted,
       icon: CheckCircle,
-      color: "text-chart-3",
-      bgColor: "bg-chart-3/10",
+      color: "text-emerald-500",
+      bgColor: "bg-emerald-500/10",
+      border: "border-t-4 border-emerald-400",
     },
     {
       title: "Pending",
       value: stats.sent,
       icon: Clock,
-      color: "text-chart-4",
-      bgColor: "bg-chart-4/10",
+      color: "text-amber-500",
+      bgColor: "bg-amber-500/10",
+      border: "border-t-4 border-amber-400",
     },
     {
       title: "Drafts",
       value: stats.drafts,
       icon: FileText,
-      color: "text-chart-2",
-      bgColor: "bg-chart-2/10",
+      color: "text-indigo-500",
+      bgColor: "bg-indigo-500/10",
+      border: "border-t-4 border-indigo-400",
     },
   ]
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => (
-        <Card key={card.title}>
+        <Card key={card.title} className={`shadow-sm ${card.border}`}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{card.title}</CardTitle>
             <div className={`p-2 rounded-lg ${card.bgColor}`}>
@@ -69,11 +73,11 @@ export function StatsCards() {
       ))}
 
       {/* Additional metrics */}
-      <Card className="md:col-span-2 lg:col-span-2">
+      <Card className="md:col-span-2 lg:col-span-2 shadow-sm border-t-4 border-sky-400">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">Total Value</CardTitle>
-          <div className="p-2 rounded-lg bg-primary/10">
-            <TrendingUp className="h-4 w-4 text-primary" />
+          <div className="p-2 rounded-lg bg-sky-500/10">
+            <TrendingUp className="h-4 w-4 text-sky-500" />
           </div>
         </CardHeader>
         <CardContent>
@@ -84,11 +88,11 @@ export function StatsCards() {
         </CardContent>
       </Card>
 
-      <Card className="md:col-span-2 lg:col-span-2">
+      <Card className="md:col-span-2 lg:col-span-2 shadow-sm border-t-4 border-emerald-400">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">Conversion Rate</CardTitle>
-          <div className="p-2 rounded-lg bg-chart-3/10">
-            <CheckCircle className="h-4 w-4 text-chart-3" />
+          <div className="p-2 rounded-lg bg-emerald-500/10">
+            <CheckCircle className="h-4 w-4 text-emerald-500" />
           </div>
         </CardHeader>
         <CardContent>

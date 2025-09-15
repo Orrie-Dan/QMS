@@ -26,27 +26,27 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <div
       className={cn(
-        "bg-sidebar border-r border-sidebar-border transition-all duration-300",
+        "bg-gradient-to-b from-[#0b1730] via-[#0f2c6d] to-[#123a8c] border-r border-white/10 transition-all duration-300",
         collapsed ? "w-16" : "w-64",
         className,
       )}
     >
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col text-white">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
+        <div className="flex items-center justify-between p-4 border-b border-white/10">
           {!collapsed && (
             <div className="flex items-center gap-2">
-              <div className="bg-sidebar-accent rounded-lg p-2">
-                <FileText className="h-5 w-5 text-sidebar-accent-foreground" />
+              <div className="bg-white/10 rounded-lg p-2">
+                <FileText className="h-5 w-5 text-white" />
               </div>
-              <span className="font-bold text-sidebar-foreground">QMS</span>
+              <span className="font-bold">QMS</span>
             </div>
           )}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setCollapsed(!collapsed)}
-            className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="text-white hover:bg-white/10 hover:text-white"
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
@@ -63,11 +63,11 @@ export function Sidebar({ className }: SidebarProps) {
                     href={item.href}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                      "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                      isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground",
+                      "hover:bg-[#60A5FA]/20",
+                      isActive ? "bg-[#60A5FA]/30 font-semibold" : "",
                     )}
                   >
-                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    <item.icon className="h-4 w-4 flex-shrink-0 text-white" />
                     {!collapsed && <span>{item.name}</span>}
                   </Link>
                 </li>

@@ -108,7 +108,7 @@ export default function ClientsPage() {
             filteredClients.map((client) => {
               const stats = getClientStats(client.id)
               return (
-                <Card key={client.id} className="hover:shadow-md transition-shadow">
+                <Card key={client.id} className="hover:shadow-md transition-shadow border-t-4 border-sky-400">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -152,11 +152,15 @@ export default function ClientsPage() {
                     {/* Contact Info */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-3 w-3 text-muted-foreground" />
+                        <span className="p-1.5 rounded-md bg-sky-500/10">
+                          <Mail className="h-3 w-3 text-sky-500" />
+                        </span>
                         <span className="text-muted-foreground truncate">{client.email}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
-                        <Phone className="h-3 w-3 text-muted-foreground" />
+                        <span className="p-1.5 rounded-md bg-indigo-500/10">
+                          <Phone className="h-3 w-3 text-indigo-500" />
+                        </span>
                         <span className="text-muted-foreground">{client.phone}</span>
                       </div>
                     </div>
@@ -166,11 +170,21 @@ export default function ClientsPage() {
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="text-muted-foreground">Quotations</p>
-                          <p className="font-medium">{stats.totalQuotations}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="p-1.5 rounded-md bg-amber-500/10">
+                              <Search className="h-3 w-3 text-amber-600" />
+                            </span>
+                            <p className="font-medium">{stats.totalQuotations}</p>
+                          </div>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Total Value</p>
-                          <p className="font-medium">${stats.totalValue.toLocaleString()}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="p-1.5 rounded-md bg-emerald-500/10">
+                              <Search className="h-3 w-3 text-emerald-600" />
+                            </span>
+                            <p className="font-medium">${stats.totalValue.toLocaleString()}</p>
+                          </div>
                         </div>
                       </div>
                       {stats.acceptedCount > 0 && (

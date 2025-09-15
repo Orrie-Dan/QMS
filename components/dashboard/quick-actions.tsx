@@ -13,6 +13,7 @@ export function QuickActions() {
       icon: Plus,
       href: "/quotations/new",
       variant: "default" as const,
+      pill: "bg-sky-500/10 text-sky-500",
     },
     {
       title: "Add Client",
@@ -20,6 +21,7 @@ export function QuickActions() {
       icon: Users,
       href: "/clients/new",
       variant: "outline" as const,
+      pill: "bg-emerald-500/10 text-emerald-500",
     },
     {
       title: "View Reports",
@@ -27,6 +29,7 @@ export function QuickActions() {
       icon: BarChart3,
       href: "/reports",
       variant: "outline" as const,
+      pill: "bg-amber-500/10 text-amber-600",
     },
     {
       title: "All Quotations",
@@ -34,6 +37,7 @@ export function QuickActions() {
       icon: FileText,
       href: "/quotations",
       variant: "outline" as const,
+      pill: "bg-indigo-500/10 text-indigo-500",
     },
   ]
 
@@ -48,7 +52,7 @@ export function QuickActions() {
             <Button key={action.title} variant={action.variant} className="h-auto p-4 justify-start" asChild>
               <Link href={action.href}>
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-muted">
+                  <div className={`p-2 rounded-lg ${action.pill}`}>
                     <action.icon className="h-4 w-4" />
                   </div>
                   <div className="text-left">

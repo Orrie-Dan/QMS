@@ -43,6 +43,9 @@ export interface User {
   email: string
   company: string
   isAuthenticated: boolean
+  photoUrl?: string
+  phoneCountryCode?: string
+  phoneNumber?: string
 }
 
 export interface CompanySettings {
@@ -66,6 +69,10 @@ interface AppState {
   // Auth actions
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
+
+  // Profile/Security
+  updateUserProfile: (updates: Partial<User>) => void
+  updateUserPassword: (current: string, next: string) => Promise<boolean>
 
   // Quotation actions
   addQuotation: (quotation: Omit<Quotation, "id" | "createdAt" | "updatedAt">) => void
@@ -176,21 +183,29 @@ const defaultCompanySettings: CompanySettings = {
 
 export const useStore = create<AppState>()(
   persist(
-    (set) => ({
-      user: null,
+    (set, get) => ({
+      user: {
+        id: "1",
+        name: "Admin User",
+        email: "admin@qms.com",
+        company: "QMS Inc.",
+        isAuthenticated: true,
+        photoUrl: "",
+        phoneCountryCode: "+250",
+        phoneNumber: "",
+      },
       quotations: mockQuotations,
       clients: mockClients,
       companySettings: defaultCompanySettings,
 
       login: async (email: string, password: string) => {
-        // Mock authentication
         if (email === "admin@qms.com" && password === "password") {
           set({
             user: {
               id: "1",
               name: "Admin User",
-        email: "admin@qms.com",
-        company: "QMS Inc.",
+              email: "admin@qms.com",
+              company: "QMS Inc.",
               isAuthenticated: true,
             },
           })
@@ -201,6 +216,19 @@ export const useStore = create<AppState>()(
 
       logout: () => {
         set({ user: null })
+      },
+
+      updateUserProfile: (updates) => {
+        set((state) => ({ user: state.user ? { ...state.user, ...updates } : state.user }))
+      },
+
+      updateUserPassword: async (current, next) => {
+        // Mock password validation: current must be 'password'
+        if (current !== "password") {
+          return false
+        }
+        // In a real app, you would hash and save server-side. We just return true.
+        return true
       },
 
       addQuotation: (quotation) => {

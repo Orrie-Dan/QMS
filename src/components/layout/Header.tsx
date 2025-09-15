@@ -2,7 +2,7 @@
 
 import { useStore } from "@/lib/store"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { LogOut, User } from "lucide-react"
 import {
   DropdownMenu,
@@ -23,33 +23,37 @@ export function Header() {
   }
 
   return (
-    <header className="bg-card border-b border-border px-6 py-4">
+    <header className="bg-gradient-to-r from-[#0b1730] via-[#0f2c6d] to-[#123a8c] border-b border-white/10 px-6 py-4 text-white">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="bg-white rounded-lg p-2 flex items-center justify-center">
+          <div className="bg-white/10 rounded-lg p-2 flex items-center justify-center">
             <img 
-              src="/Esri2.png" 
+              src="/Esri.png" 
               alt="Esri Logo" 
               className="h-8 w-auto"
             />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-card-foreground">Welcome back, {user?.name}</h2>
-            <p className="text-sm text-muted-foreground">{user?.company}</p>
+            <h2 className="text-lg font-semibold">Welcome back, {user?.name}</h2>
+            <p className="text-sm text-white/70">{user?.company}</p>
           </div>
         </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full text-white hover:bg-white/10">
               <Avatar className="h-8 w-8">
-                <AvatarFallback>
-                  {user?.name
-                    ?.split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()}
-                </AvatarFallback>
+                {user?.photoUrl ? (
+                  <AvatarImage src={user.photoUrl} alt={user.name} />
+                ) : (
+                  <AvatarFallback>
+                    {user?.name
+                      ?.split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()}
+                  </AvatarFallback>
+                )}
               </Avatar>
             </Button>
           </DropdownMenuTrigger>

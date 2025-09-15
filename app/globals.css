@@ -30,14 +30,17 @@
   --chart-4: oklch(0.769 0.188 70.08); /* #fbbf24 */
   --chart-5: oklch(0.627 0.265 303.9); /* #ef4444 */
   --radius: 0.5rem;
-  --sidebar: oklch(0.97 0 0); /* #f1f5f9 */
-  --sidebar-foreground: oklch(0.205 0 0); /* #1f2937 */
-  --sidebar-primary: oklch(1 0 0); /* #ffffff */
-  --sidebar-primary-foreground: oklch(0.205 0 0); /* #1f2937 */
-  --sidebar-accent: oklch(0.646 0.222 280.116); /* #8b5cf6 */
-  --sidebar-accent-foreground: oklch(1 0 0); /* #ffffff */
-  --sidebar-border: oklch(0.9 0 0); /* #e5e7eb */
-  --sidebar-ring: oklch(0.646 0.222 280.116 / 0.5); /* rgba(139, 92, 246, 0.5) */
+  /* Sidebar: darker emerald */
+  --sidebar-background: oklch(0.5 0.201 151); /* ~ emerald-700 */
+  --sidebar-foreground: oklch(1 0 0); /* white */
+  --sidebar-primary: oklch(0.5 0.201 151);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.45 0.19 151); /* ~ emerald-800 */
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(1 0 0 / 0.2); /* white/20 */
+  --sidebar-ring: oklch(0.646 0.222 280.116 / 0.5);
+  /* Back-compat */
+  --sidebar: var(--sidebar-background);
 }
 
 .dark {
@@ -65,7 +68,7 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar-background: oklch(0.205 0 0); /* dark near-black */
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -73,6 +76,7 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+  --sidebar: var(--sidebar-background);
 }
 
 @theme inline {
@@ -106,7 +110,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
+  --color-sidebar: var(--sidebar-background);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);

@@ -9,14 +9,38 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Plus, Search, Filter, Eye, Edit, Trash2, MoreHorizontal } from "lucide-react"
+import { Plus, Search, Filter, Eye, Edit, Trash2, MoreHorizontal, FileText, CalendarDays, DollarSign } from "lucide-react"
 import Link from "next/link"
 
-const statusColors = {
-  draft: "bg-muted text-muted-foreground",
-  sent: "bg-chart-4/20 text-chart-4",
-  accepted: "bg-chart-3/20 text-chart-3",
-  rejected: "bg-destructive/20 text-destructive",
+const statusStyles: Record<string, { badge: string; stripe: string; pill: string; icon: string; border: string }> = {
+  draft: {
+    badge: "bg-muted text-muted-foreground",
+    stripe: "border-l-4 border-indigo-400",
+    pill: "bg-indigo-500/10",
+    icon: "text-indigo-500",
+    border: "border-t-4 border-indigo-300",
+  },
+  sent: {
+    badge: "bg-chart-4/20 text-chart-4",
+    stripe: "border-l-4 border-sky-400",
+    pill: "bg-sky-500/10",
+    icon: "text-sky-500",
+    border: "border-t-4 border-sky-300",
+  },
+  accepted: {
+    badge: "bg-chart-3/20 text-chart-3",
+    stripe: "border-l-4 border-emerald-400",
+    pill: "bg-emerald-500/10",
+    icon: "text-emerald-500",
+    border: "border-t-4 border-emerald-300",
+  },
+  rejected: {
+    badge: "bg-destructive/20 text-destructive",
+    stripe: "border-l-4 border-red-400",
+    pill: "bg-red-500/10",
+    icon: "text-red-500",
+    border: "border-t-4 border-red-300",
+  },
 }
 
 export default function QuotationsPage() {
@@ -106,67 +130,90 @@ export default function QuotationsPage() {
               </CardContent>
             </Card>
           ) : (
-            filteredQuotations.map((quotation) => (
-              <Card key={quotation.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-lg">{quotation.quotationNumber}</h3>
-                        <Badge className={statusColors[quotation.status]}>
-                          {quotation.status.charAt(0).toUpperCase() + quotation.status.slice(1)}
-                        </Badge>
+            filteredQuotations.map((quotation) => {
+              const s = statusStyles[quotation.status] || statusStyles.draft
+              return (
+                <Card key={quotation.id} className={`shadow-sm ${s.border}`}>
+                  <CardContent className={`p-6 bg-white/70 backdrop-blur-sm ${s.stripe}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-lg">{quotation.quotationNumber}</h3>
+                          <Badge className={s.badge}>
+                            {quotation.status.charAt(0).toUpperCase() + quotation.status.slice(1)}
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className={`p-1.5 rounded-md ${s.pill}`}>
+                              <FileText className={`h-3 w-3 ${s.icon}`} />
+                            </span>
+                            <div>
+                              <p className="text-muted-foreground">Client</p>
+                              <p className="font-medium">{quotation.clientName}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`p-1.5 rounded-md ${s.pill}`}>
+                              <DollarSign className={`h-3 w-3 ${s.icon}`} />
+                            </span>
+                            <div>
+                              <p className="text-muted-foreground">Total Amount</p>
+                              <p className="font-medium">${quotation.total.toLocaleString()}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`p-1.5 rounded-md ${s.pill}`}>
+                              <CalendarDays className={`h-3 w-3 ${s.icon}`} />
+                            </span>
+                            <div>
+                              <p className="text-muted-foreground">Valid Until</p>
+                              <p className="font-medium">{new Date(quotation.validUntil).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`p-1.5 rounded-md ${s.pill}`}>
+                              <CalendarDays className={`h-3 w-3 ${s.icon}`} />
+                            </span>
+                            <div>
+                              <p className="text-muted-foreground">Last Updated</p>
+                              <p className="font-medium">{new Date(quotation.updatedAt).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Client</p>
-                          <p className="font-medium">{quotation.clientName}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Total Amount</p>
-                          <p className="font-medium">${quotation.total.toLocaleString()}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Valid Until</p>
-                          <p className="font-medium">{new Date(quotation.validUntil).toLocaleDateString()}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Last Updated</p>
-                          <p className="font-medium">{new Date(quotation.updatedAt).toLocaleDateString()}</p>
-                        </div>
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={`/quotations/${quotation.id}`}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/quotations/${quotation.id}/edit`}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(quotation.id)} className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link href={`/quotations/${quotation.id}`}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/quotations/${quotation.id}/edit`}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDelete(quotation.id)} className="text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardContent>
+                </Card>
+              )
+            })
           )}
         </div>
       </div>

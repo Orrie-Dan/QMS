@@ -27,18 +27,27 @@ export function Header() {
   if (!user) return null
 
   return (
-    <header className="bg-background border-b border-border px-6 py-4">
+    <header className="bg-gradient-to-r from-[#0b1730] via-[#0f2c6d] to-[#123a8c] border-b border-white/10 px-6 py-4 text-white">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Welcome back, {user.name}</h1>
-          <p className="text-muted-foreground">{user.company}</p>
+        <div className="flex items-center gap-4">
+          <div className="bg-white/10 rounded-lg p-2 flex items-center justify-center">
+            <img 
+              src="/Esri.png" 
+              alt="Esri Logo" 
+              className="h-8 w-auto"
+            />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold">Welcome back, {user.name}</h2>
+            <p className="text-sm text-white/70">{user.company}</p>
+          </div>
         </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+            <Button variant="ghost" className="relative h-10 w-10 rounded-full text-white hover:bg-white/10">
               <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-primary text-primary-foreground">
+                <AvatarFallback className="bg-white/20 text-white">
                   {user.name
                     .split(" ")
                     .map((n) => n[0])

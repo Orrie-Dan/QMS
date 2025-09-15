@@ -29,14 +29,15 @@
   --chart-4: 47.9 95.8% 53.1%; /* #fbbf24 */
   --chart-5: 0 84.2% 60.2%; /* #ef4444 */
   --radius: 0.5rem;
-  --sidebar: 0 0% 98%; /* light gray sidebar */
-  --sidebar-foreground: 222.2 84% 4.9%; /* dark text */
-  --sidebar-primary: 222.2 84% 4.9%; /* dark */
-  --sidebar-primary-foreground: 0 0% 98%; /* light */
-  --sidebar-accent: 210 40% 96%; /* light gray for hover */
-  --sidebar-accent-foreground: 222.2 84% 4.9%; /* dark text */
-  --sidebar-border: 214.3 31.8% 91.4%; /* light border */
-  --sidebar-ring: 221.2 83.2% 53.3%; /* esri blue for focus */
+  /* Sidebar: darker base with light-blue hover */
+  --sidebar: 217 33% 17%; /* deep blue-ish for compatibility */
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-primary: 217 33% 17%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 217 91% 60%; /* blue-400 */
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 0 0% 100% / 0.2;
+  --sidebar-ring: 221.2 83.2% 53.3%;
 }
 
 .dark {
@@ -64,11 +65,11 @@
   --chart-3: 142.1 76.2% 36.3%; /* green */
   --chart-4: 47.9 95.8% 53.1%; /* yellow */
   --chart-5: 0 84.2% 60.2%; /* red */
-  --sidebar: 217.2 32.6% 17.5%; /* dark gray sidebar */
+  --sidebar: 217.2 32.6% 17.5%; /* dark gray/blue sidebar */
   --sidebar-foreground: 210 40% 98%; /* light text */
   --sidebar-primary: 210 40% 98%; /* light */
   --sidebar-primary-foreground: 217.2 32.6% 17.5%; /* dark */
-  --sidebar-accent: 217.2 32.6% 25%; /* slightly lighter gray for hover */
+  --sidebar-accent: 217 91% 60%;
   --sidebar-accent-foreground: 210 40% 98%; /* light text */
   --sidebar-border: 217.2 32.6% 25%; /* dark border */
   --sidebar-ring: 210 100% 75%; /* lighter esri blue for focus */

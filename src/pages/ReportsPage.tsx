@@ -83,11 +83,11 @@ export default function ReportsPage() {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="shadow-sm border-t-4 border-sky-400">
           <CardContent className="p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FileText className="h-6 w-6 text-blue-600" />
+              <div className="p-2 bg-sky-500/10 rounded-lg">
+                <FileText className="h-6 w-6 text-sky-500" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Quotations</p>
@@ -96,12 +96,11 @@ export default function ReportsPage() {
             </div>
           </CardContent>
         </Card>
-
-        <Card>
+        <Card className="shadow-sm border-t-4 border-emerald-400">
           <CardContent className="p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="h-6 w-6 text-green-600" />
+              <div className="p-2 bg-emerald-500/10 rounded-lg">
+                <DollarSign className="h-6 w-6 text-emerald-500" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Revenue</p>
@@ -110,12 +109,11 @@ export default function ReportsPage() {
             </div>
           </CardContent>
         </Card>
-
-        <Card>
+        <Card className="shadow-sm border-t-4 border-indigo-400">
           <CardContent className="p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Users className="h-6 w-6 text-purple-600" />
+              <div className="p-2 bg-indigo-500/10 rounded-lg">
+                <Users className="h-6 w-6 text-indigo-500" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Clients</p>
@@ -124,12 +122,11 @@ export default function ReportsPage() {
             </div>
           </CardContent>
         </Card>
-
-        <Card>
+        <Card className="shadow-sm border-t-4 border-amber-400">
           <CardContent className="p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-orange-600" />
+              <div className="p-2 bg-amber-500/10 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-amber-500" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Avg. Quotation</p>
@@ -140,6 +137,7 @@ export default function ReportsPage() {
         </Card>
       </div>
 
+      {/* Quotation Status and Monthly Quotations */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Quotation Status Breakdown */}
         <Card>
@@ -159,21 +157,9 @@ export default function ReportsPage() {
                 <ChartContainer config={statusChartConfig} className="h-[300px]">
                   <PieChart>
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Pie
-                      data={statusChartData}
-                      dataKey="count"
-                      nameKey="status"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      innerRadius={40}
-                      paddingAngle={2}
-                    >
+                    <Pie data={statusChartData} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={80} innerRadius={40} paddingAngle={2}>
                       {statusChartData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={statusColors[entry.status.toLowerCase() as keyof typeof statusColors] || "#6b7280"} 
-                        />
+                        <Cell key={`cell-${index}`} fill={statusColors[entry.status.toLowerCase() as keyof typeof statusColors] || "#6b7280"} />
                       ))}
                     </Pie>
                     <ChartLegend content={<ChartLegendContent />} />
@@ -183,10 +169,7 @@ export default function ReportsPage() {
                   {statusChartData.map((entry) => (
                     <div key={entry.status} className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: statusColors[entry.status.toLowerCase() as keyof typeof statusColors] || "#6b7280" }}
-                        />
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: statusColors[entry.status.toLowerCase() as keyof typeof statusColors] || "#6b7280" }} />
                         <span className="text-gray-600">{entry.status}</span>
                       </div>
                       <span className="font-medium">{entry.count} ({entry.percentage}%)</span>
@@ -222,7 +205,7 @@ export default function ReportsPage() {
         </Card>
       </div>
 
-      {/* Top Clients */}
+      {/* Top Clients (restored position after the grid) */}
       <Card>
         <CardHeader>
           <CardTitle>Top Clients by Revenue</CardTitle>
@@ -238,19 +221,19 @@ export default function ReportsPage() {
           ) : (
             <div className="space-y-4">
               {topClients.map((client, index) => (
-                <div key={client.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-600">#{index + 1}</span>
+                <div key={client.id} className="flex items-center justify-between p-4 border rounded-lg bg-white/60 backdrop-blur-sm border-l-4 border-sky-400 hover:bg-sky-500/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-sky-500/10 rounded-full flex items-center justify-center text-sm font-medium text-sky-600">
+                      {index + 1}
                     </div>
                     <div>
                       <h3 className="font-medium">{client.name}</h3>
-                      <p className="text-sm text-gray-600">{client.company}</p>
+                      <p className="text-sm text-muted-foreground">{client.company}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="font-medium">${client.totalValue.toLocaleString()}</p>
-                    <p className="text-sm text-gray-600">{client.quotationCount} quotations</p>
+                    <p className="text-sm text-muted-foreground">{client.quotationCount} quotations</p>
                   </div>
                 </div>
               ))}
