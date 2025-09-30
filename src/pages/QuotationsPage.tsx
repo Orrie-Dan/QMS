@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { useStore, Quotation } from "../lib/store"
+import { getQuotations as apiGetQuotations, deleteQuotation as apiDeleteQuotation, type UIQuotation } from "../lib/api"
 import { generateQuotationPDF } from "../lib/pdfUtils"
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
 import { Input } from "../../components/ui/input"
 import { Plus, Search, Eye, Edit, Trash2, Download, FileText, CalendarDays, DollarSign } from "lucide-react"
 
@@ -18,21 +19,33 @@ const statusStyles: Record<string, { badge: string; border: string; pill: string
 }
 
 export default function QuotationsPage() {
-  const quotations = useStore((state) => state.quotations)
-  const deleteQuotation = useStore((state) => state.deleteQuotation)
-  const companySettings = useStore((state) => state.companySettings)
-  const clients = useStore((state) => state.clients)
+  const [quotations, setQuotations] = useState<UIQuotation[]>([])
   const [searchTerm, setSearchTerm] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const filteredQuotations = quotations.filter(
-    (quotation) =>
-      quotation.quotationNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      quotation.clientName.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  useEffect(() => {
+    let mounted = true
+    setLoading(true)
+    setError(null)
+    apiGetQuotations()
+      .then((data) => { if (mounted) setQuotations(data) })
+      .catch((e) => { if (mounted) setError(e?.message || "Failed to load quotations") })
+      .finally(() => { if (mounted) setLoading(false) })
+    return () => { mounted = false }
+  }, [])
 
-  const handleDownload = (quotation: Quotation) => {
-    const client = clients.find((c) => c.id === quotation.clientId)
-    generateQuotationPDF(quotation, companySettings, client)
+  const filteredQuotations = useMemo(() =>
+    quotations.filter(
+      (quotation) =>
+        quotation.quotationNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        quotation.clientName.toLowerCase().includes(searchTerm.toLowerCase()),
+    ),
+  [quotations, searchTerm])
+
+  const handleDownload = (quotation: any) => {
+    // TODO: integrate actual PDF with backend data if needed
+    alert("PDF generation can be wired to backend data later.")
   }
 
   return (
@@ -62,85 +75,103 @@ export default function QuotationsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4">
-        {filteredQuotations.map((quotation) => {
-          const s = statusStyles[quotation.status] || statusStyles.draft
-          return (
-            <Card key={quotation.id} className={`shadow-sm ${s.border}`}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{quotation.quotationNumber}</CardTitle>
-                    <CardDescription>{quotation.clientName}</CardDescription>
-                  </div>
-                  <Badge className={s.badge}>{quotation.status}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className={`p-1.5 rounded-md ${s.pill}`}>
-                        <DollarSign className={`h-3 w-3 ${s.icon}`} />
-                      </span>
-                      <span>Total: ${quotation.total.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className={`p-1.5 rounded-md ${s.pill}`}>
-                        <CalendarDays className={`h-3 w-3 ${s.icon}`} />
-                      </span>
-                      <span>Valid until: {quotation.validUntil}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Link to={`/quotations/${quotation.id}`}>
-                      <Button variant="outline" size="sm">
-                        <Eye className="mr-2 h-4 w-4" />
-                        View
-                      </Button>
-                    </Link>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleDownload(quotation)}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      PDF
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => deleteQuotation(quotation.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-
-      {filteredQuotations.length === 0 && (
+      {error && (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground mb-4">No quotations found</p>
-            <Link to="/quotations/new">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create your first quotation
-              </Button>
-            </Link>
+          <CardContent className="text-center py-6 text-red-600">{error}</CardContent>
+        </Card>
+      )}
+
+      {loading ? (
+        <Card>
+          <CardContent className="text-center py-12">Loading…</CardContent>
+        </Card>
+      ) : (
+        <Card className="shadow-sm">
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[160px]">Number</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead>Valid Until</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="w-[160px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredQuotations.map((quotation) => {
+                  const s = statusStyles[quotation.status] || statusStyles.draft
+                  return (
+                    <TableRow key={quotation.id}>
+                      <TableCell className="font-medium flex items-center gap-2">
+                        <span className={`p-1.5 rounded-md ${s.pill}`}>
+                          <FileText className={`h-3 w-3 ${s.icon}`} />
+                        </span>
+                        {quotation.quotationNumber}
+                      </TableCell>
+                      <TableCell>{quotation.clientName}</TableCell>
+                      <TableCell>
+                        <Badge className={s.badge}>{quotation.status}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">${quotation.total.toLocaleString()}</TableCell>
+                      <TableCell>{quotation.validUntil ? new Date(quotation.validUntil).toLocaleDateString() : "—"}</TableCell>
+                      <TableCell>{new Date(quotation.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-2">
+                          <Link to={`/quotations/${quotation.id}`}>
+                            <Button variant="outline" size="sm">
+                              <Eye className="mr-2 h-4 w-4" />
+                              View
+                            </Button>
+                          </Link>
+                          <Button variant="outline" size="sm" onClick={() => handleDownload(quotation)}>
+                            <Download className="mr-2 h-4 w-4" />
+                            PDF
+                          </Button>
+                          <Link to={`/quotations/${quotation.id}/edit`}>
+                            <Button variant="outline" size="sm">
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                await apiDeleteQuotation(quotation.id)
+                                setQuotations((prev) => prev.filter((q) => q.id !== quotation.id))
+                              } catch (e) {
+                                console.error(e)
+                                alert("Failed to delete quotation")
+                              }
+                            }}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+                {filteredQuotations.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                      No quotations found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}
+
+      
     </div>
   )
 }

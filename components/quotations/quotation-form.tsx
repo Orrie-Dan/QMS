@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useStore, type Quotation, type QuotationItem } from "@/lib/store"
+import type { UIClient, UIQuotation, UIQuotationItem } from "@/lib/api"
+import { getClients, createQuotation as apiCreateQuotation, updateQuotation as apiUpdateQuotation } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,90 +13,95 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, Trash2, ArrowLeft, Save, Send } from "lucide-react"
 
 interface QuotationFormProps {
-  quotation?: Quotation
+  quotation?: UIQuotation
   mode: "create" | "edit"
 }
 
 export function QuotationForm({ quotation, mode }: QuotationFormProps) {
   const router = useRouter()
-  const { clients, addQuotation, updateQuotation } = useStore()
+  const [clients, setClients] = useState<UIClient[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const [step, setStep] = useState(1)
   const [selectedClientId, setSelectedClientId] = useState(quotation?.clientId || "")
-  const [items, setItems] = useState<QuotationItem[]>(quotation?.items || [])
-  const [taxRate, setTaxRate] = useState(quotation?.taxRate || 18)
-  const [discount, setDiscount] = useState(quotation?.discount || 0)
+  const [items, setItems] = useState<UIQuotationItem[]>(quotation?.items || [])
+  const [taxRate, setTaxRate] = useState(quotation?.taxRate ?? 18)
+  const [discount, setDiscount] = useState(0)
   const [notes, setNotes] = useState(quotation?.notes || "")
   const [validUntil, setValidUntil] = useState(
-    quotation?.validUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    (quotation?.validUntil?.slice(0, 10) || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]),
   )
 
-  const selectedClient = clients.find((c) => c.id === selectedClientId)
+  useEffect(() => {
+    let mounted = true
+    getClients()
+      .then((data) => {
+        if (!mounted) return
+        setClients(data)
+      })
+      .catch(() => {})
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const selectedClient = useMemo(() => clients.find((c) => c.id === selectedClientId), [clients, selectedClientId])
 
   // Calculate totals
-  const subtotal = items.reduce((sum, item) => sum + item.total, 0)
-  const taxAmount = (subtotal * taxRate) / 100
-  const total = subtotal + taxAmount - discount
+  const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0)
+  const taxAmount = (subtotal * (taxRate || 0)) / 100
+  const total = subtotal + taxAmount - (discount || 0)
 
   const addItem = () => {
-    const newItem: QuotationItem = {
-      id: Date.now().toString(),
+    const newItem: UIQuotationItem = {
       description: "",
       quantity: 1,
       unitPrice: 0,
-      total: 0,
     }
     setItems([...items, newItem])
   }
 
-  const updateItem = (id: string, field: keyof QuotationItem, value: string | number) => {
-    setItems(
-      items.map((item) => {
-        if (item.id === id) {
-          const updatedItem = { ...item, [field]: value }
-          if (field === "quantity" || field === "unitPrice") {
-            updatedItem.total = updatedItem.quantity * updatedItem.unitPrice
-          }
-          return updatedItem
-        }
-        return item
-      }),
-    )
+  const updateItem = (index: number, field: keyof UIQuotationItem, value: string | number) => {
+    setItems(items.map((item, i) => (i === index ? { ...item, [field]: value as any } : item)))
   }
 
-  const removeItem = (id: string) => {
-    setItems(items.filter((item) => item.id !== id))
+  const removeItem = (index: number) => {
+    setItems(items.filter((_, i) => i !== index))
   }
 
-  const handleSave = (status: "draft" | "sent") => {
+  const handleSave = async (status: "draft" | "sent") => {
     if (!selectedClientId || items.length === 0) return
-
-    const quotationData = {
-      quotationNumber: quotation?.quotationNumber || `QUO-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`,
+    setLoading(true)
+    setError(null)
+    try {
+      const payload = {
       clientId: selectedClientId,
-      clientName: selectedClient?.name || "",
       status,
-      items,
-      subtotal,
-      taxRate,
-      taxAmount,
-      discount,
-      total,
-      validUntil,
-      notes,
-    }
-
+        notes: notes || null,
+        validUntil: validUntil || null,
+        taxRatePercent: taxRate ?? 0,
+        items: items.map((it) => ({ description: it.description, quantity: it.quantity, unitPrice: it.unitPrice })),
+      }
     if (mode === "edit" && quotation) {
-      updateQuotation(quotation.id, quotationData)
+        const updated = await apiUpdateQuotation(quotation.id, payload)
+        router.push(`/quotations/${updated.id}`)
     } else {
-      addQuotation(quotationData)
+        const created = await apiCreateQuotation(payload)
+        router.push(`/quotations/${created.id}`)
+      }
+    } catch (e: any) {
+      setError(e?.message || "Failed to save quotation")
+    } finally {
+      setLoading(false)
     }
-
-    router.push("/quotations")
   }
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="text-sm text-destructive">{error}</div>
+      )}
       {/* Progress Steps */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-4">
@@ -198,10 +204,10 @@ export function QuotationForm({ quotation, mode }: QuotationFormProps) {
             ) : (
               <div className="space-y-4">
                 {items.map((item, index) => (
-                  <div key={item.id} className="p-4 border rounded-lg">
+                  <div key={index} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-medium">Item {index + 1}</h4>
-                      <Button variant="ghost" size="sm" onClick={() => removeItem(item.id)}>
+                      <Button variant="ghost" size="sm" onClick={() => removeItem(index)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -211,7 +217,7 @@ export function QuotationForm({ quotation, mode }: QuotationFormProps) {
                         <Label>Description</Label>
                         <Textarea
                           value={item.description}
-                          onChange={(e) => updateItem(item.id, "description", e.target.value)}
+                          onChange={(e) => updateItem(index, "description", e.target.value)}
                           placeholder="Item description"
                         />
                       </div>
@@ -220,7 +226,7 @@ export function QuotationForm({ quotation, mode }: QuotationFormProps) {
                         <Input
                           type="number"
                           value={item.quantity}
-                          onChange={(e) => updateItem(item.id, "quantity", Number.parseInt(e.target.value) || 0)}
+                          onChange={(e) => updateItem(index, "quantity", Number.parseInt(e.target.value) || 0)}
                           min="1"
                         />
                       </div>
@@ -229,7 +235,7 @@ export function QuotationForm({ quotation, mode }: QuotationFormProps) {
                         <Input
                           type="number"
                           value={item.unitPrice}
-                          onChange={(e) => updateItem(item.id, "unitPrice", Number.parseFloat(e.target.value) || 0)}
+                          onChange={(e) => updateItem(index, "unitPrice", Number.parseFloat(e.target.value) || 0)}
                           min="0"
                           step="0.01"
                         />
@@ -238,7 +244,7 @@ export function QuotationForm({ quotation, mode }: QuotationFormProps) {
 
                     <div className="mt-4 text-right">
                       <p className="text-sm text-muted-foreground">
-                        Total: <span className="font-medium">${item.total.toFixed(2)}</span>
+                        Total: <span className="font-medium">${(item.quantity * item.unitPrice).toFixed(2)}</span>
                       </p>
                     </div>
                   </div>
@@ -375,11 +381,11 @@ export function QuotationForm({ quotation, mode }: QuotationFormProps) {
                   Previous
                 </Button>
                 <div className="space-x-2">
-                  <Button variant="outline" onClick={() => handleSave("draft")}>
+                  <Button variant="outline" onClick={() => handleSave("draft")} disabled={loading}>
                     <Save className="mr-2 h-4 w-4" />
                     Save as Draft
                   </Button>
-                  <Button onClick={() => handleSave("sent")}>
+                  <Button onClick={() => handleSave("sent")} disabled={loading}>
                     <Send className="mr-2 h-4 w-4" />
                     Send Quotation
                   </Button>

@@ -1,16 +1,35 @@
 import { Link } from "react-router-dom"
-import { useStore } from "../lib/store"
+import { useEffect, useState } from "react"
+import { getClients as apiGetClients, deleteClient as apiDeleteClient, type UIClient } from "../lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Mail, Phone, MapPin, Edit, Trash2 } from "lucide-react"
 
 export default function ClientsPage() {
-  const { clients, deleteClient } = useStore()
+  const [clients, setClients] = useState<UIClient[]>([])
+  const loadClients = () => apiGetClients().then(setClients).catch(console.error)
+  useEffect(() => { loadClients() }, [])
+  useEffect(() => {
+    const onFocus = () => loadClients()
+    const onVisibility = () => { if (document.visibilityState === 'visible') loadClients() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [])
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete ${name}?`)) {
-      deleteClient(id)
+      try {
+        await apiDeleteClient(id)
+        setClients((prev) => prev.filter((c) => c.id !== id))
+      } catch (e) {
+        console.error(e)
+        alert("Failed to delete client")
+      }
     }
   }
 
@@ -67,7 +86,7 @@ export default function ClientsPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Locations</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {new Set(clients.map(c => c.address.split(',')[2]?.trim())).size}
+                  {new Set(clients.map(c => (c.address ? c.address.split(',')[2]?.trim() : "")).filter(Boolean)).size}
                 </p>
               </div>
             </div>
@@ -82,6 +101,9 @@ export default function ClientsPage() {
           <CardDescription>
             A list of all your clients and their contact information
           </CardDescription>
+          <div className="mt-2">
+            <Button variant="outline" size="sm" onClick={loadClients}>Refresh</Button>
+          </div>
         </CardHeader>
         <CardContent>
           {clients.length === 0 ? (

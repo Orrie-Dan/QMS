@@ -1,4 +1,5 @@
-import { useStore } from "../../lib/store"
+import { useEffect, useState } from "react"
+import { getRecentQuotations, type UIQuotation } from "../../lib/api"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,11 +14,10 @@ const styles: Record<string, { badge: string; stripe: string; pill: string; icon
 }
 
 export default function RecentQuotations() {
-  const { quotations } = useStore()
-
-  const recentQuotations = quotations
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5)
+  const [recentQuotations, setRecentQuotations] = useState<UIQuotation[]>([])
+  useEffect(() => {
+    getRecentQuotations().then(setRecentQuotations).catch(console.error)
+  }, [])
 
   return (
     <Card>

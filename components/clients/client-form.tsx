@@ -4,7 +4,8 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useStore, type Client } from "@/lib/store"
+import { type Client, useStore } from "@/lib/store"
+import { createClient, updateClient as apiUpdateClient } from "@/src/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,7 +20,9 @@ interface ClientFormProps {
 
 export function ClientForm({ client, mode }: ClientFormProps) {
   const router = useRouter()
-  const { addClient, updateClient } = useStore()
+  const addClient = useStore((s) => s.addClient)
+  const updateClient = useStore((s) => s.updateClient)
+  
 
   const [formData, setFormData] = useState({
     name: client?.name || "",
@@ -52,17 +55,25 @@ export function ClientForm({ client, mode }: ClientFormProps) {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!validateForm()) {
       return
     }
 
-    if (mode === "edit" && client) {
-      updateClient(client.id, formData)
-    } else {
-      addClient(formData)
+    try {
+      if (mode === "edit" && client) {
+        await apiUpdateClient(client.id, formData)
+        updateClient(client.id, { ...formData })
+      } else {
+        await createClient(formData)
+        addClient({ ...formData })
+      }
+    } catch (err) {
+      console.error(err)
+      alert("Failed to save client")
+      return
     }
 
     router.push("/clients")

@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useStore } from "../lib/store"
+import { createClient } from "../lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,7 +10,6 @@ import { ArrowLeft, Save } from "lucide-react"
 
 export default function NewClientPage() {
   const navigate = useNavigate()
-  const { addClient } = useStore()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -56,7 +55,7 @@ export default function NewClientPage() {
     setIsSubmitting(true)
 
     try {
-      addClient(formData)
+      await createClient(formData)
       navigate("/clients")
     } catch (error) {
       console.error("Error adding client:", error)

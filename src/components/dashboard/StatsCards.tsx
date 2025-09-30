@@ -1,16 +1,20 @@
-import { useStore } from "../../lib/store"
+import { useEffect, useState } from "react"
+import { getDashboardStats } from "../../lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DollarSign, FileText, Users, TrendingUp } from "lucide-react"
 
 export default function StatsCards() {
-  const { quotations, clients } = useStore()
+  const [stats, setStats] = useState({ totalRevenue: 0, totalQuotations: 0, totalClients: 0 })
+  useEffect(() => {
+    getDashboardStats().then(setStats).catch(console.error)
+  }, [])
 
-  const totalQuotations = quotations.length
-  const totalClients = clients.length
-  const totalRevenue = quotations.reduce((sum, q) => sum + q.total, 0)
+  const totalRevenue = stats.totalRevenue
+  const totalQuotations = stats.totalQuotations
+  const totalClients = stats.totalClients
   const averageQuotationValue = totalQuotations > 0 ? totalRevenue / totalQuotations : 0
 
-  const stats = [
+  const cards = [
     {
       title: "Total Revenue",
       value: `$${totalRevenue.toLocaleString()}`,
@@ -51,7 +55,7 @@ export default function StatsCards() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {stats.map((stat, index) => (
+      {cards.map((stat, index) => (
         <Card key={index} className={`shadow-sm ${stat.border}`}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>

@@ -28,6 +28,6 @@
       "@/lib/*": ["./lib/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "app", "components", "lib"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
