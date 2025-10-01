@@ -19,6 +19,7 @@ export type UIQuotation = {
   clientId: string;
   clientName: string;
   status: "draft" | "sent" | "accepted" | "rejected" | "expired";
+  currency: "RWF" | "USD" | "EUR";
   total: number;
   validUntil?: string | null;
   createdAt: string;
@@ -303,6 +304,7 @@ export async function getQuotations(): Promise<UIQuotation[]> {
       clientId: q.clientId,
       clientName: q.clientName,
       status: q.status as UIQuotation["status"],
+      currency: q.currency,
       total: q.total,
       validUntil: q.validUntil,
       createdAt: q.createdAt,
@@ -315,6 +317,7 @@ export async function getQuotations(): Promise<UIQuotation[]> {
     clientId: q.clientId,
     clientName: q.client?.name ?? "",
     status: String(q.status).toLowerCase(),
+    currency: q.currency || "RWF",
     total: decimalToNumber(q.total),
     validUntil: q.validUntil,
     createdAt: q.createdAt,
@@ -363,6 +366,7 @@ export async function getRecentQuotations(): Promise<UIQuotation[]> {
       clientId: q.clientId,
       clientName: q.clientName,
       status: q.status as UIQuotation["status"],
+      currency: q.currency,
       total: q.total,
       validUntil: q.validUntil,
       createdAt: q.createdAt,
@@ -375,6 +379,7 @@ export async function getRecentQuotations(): Promise<UIQuotation[]> {
     clientId: q.clientId,
     clientName: q.client?.name ?? "",
     status: String(q.status).toLowerCase(),
+    currency: q.currency || "RWF",
     total: decimalToNumber(q.total),
     validUntil: q.validUntil,
     createdAt: q.createdAt,

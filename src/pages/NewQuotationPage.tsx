@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Trash2, ArrowLeft, Loader2, Save, Send } from "lucide-react"
 import type { QuotationItem } from "@/lib/store"
+import { CURRENCY_OPTIONS, formatCurrency, type Currency } from "@/lib/utils"
 
 export default function NewQuotationPage() {
   const navigate = useNavigate()
@@ -65,6 +66,7 @@ export default function NewQuotationPage() {
     notes: "",
     taxRate: 18,
     discount: 0,
+    currency: "RWF" as Currency,
   })
 
   const [clientType, setClientType] = useState<"existing" | "new">("existing")
@@ -80,7 +82,7 @@ export default function NewQuotationPage() {
   })
 
   const [items, setItems] = useState<Omit<QuotationItem, "id" | "total">[]>([
-    { description: "", quantity: 1, unitPrice: 0 },
+    { description: "", quantity: 1, unitPrice: 0, category: "", itemDescription: "" },
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -110,7 +112,7 @@ export default function NewQuotationPage() {
   }
 
   const addItem = () => {
-    setItems([...items, { description: "", quantity: 1, unitPrice: 0 }])
+    setItems([...items, { description: "", quantity: 1, unitPrice: 0, category: "", itemDescription: "" }])
   }
 
   const removeItem = (index: number) => {
@@ -120,6 +122,17 @@ export default function NewQuotationPage() {
   const updateItem = (index: number, field: keyof Omit<QuotationItem, "id" | "total">, value: string | number) => {
     const updatedItems = [...items]
     updatedItems[index] = { ...updatedItems[index], [field]: value }
+    
+    // Auto-set description based on category selection
+    if (field === "category" && typeof value === "string") {
+      const categoryLabels = {
+        services: "Services",
+        software: "Software", 
+        training: "Training"
+      }
+      updatedItems[index].description = categoryLabels[value as keyof typeof categoryLabels] || ""
+    }
+    
     setItems(updatedItems)
   }
 
@@ -154,6 +167,7 @@ export default function NewQuotationPage() {
         clientId: clientType === "existing" ? formData.clientId : "new-client",
         clientName: getClientDisplayName(),
         status,
+        currency: formData.currency,
         items: quotationItems,
         subtotal,
         taxRate: formData.taxRate,
@@ -381,6 +395,25 @@ export default function NewQuotationPage() {
                   required
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="currency">Currency</Label>
+                <Select
+                  value={formData.currency}
+                  onValueChange={(value: Currency) => setFormData({ ...formData, currency: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCY_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </CardContent>
           </Card>
 
@@ -392,19 +425,19 @@ export default function NewQuotationPage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span>${subtotal.toLocaleString()}</span>
+                <span>{formatCurrency(subtotal, formData.currency)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Tax ({formData.taxRate}%):</span>
-                <span>${taxAmount.toLocaleString()}</span>
+                <span>{formatCurrency(taxAmount, formData.currency)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Discount:</span>
-                <span>-${formData.discount.toLocaleString()}</span>
+                <span>-{formatCurrency(formData.discount, formData.currency)}</span>
               </div>
               <div className="flex justify-between font-bold text-lg border-t pt-2">
                 <span>Total:</span>
-                <span>${total.toLocaleString()}</span>
+                <span>{formatCurrency(total, formData.currency)}</span>
               </div>
             </CardContent>
           </Card>
@@ -424,54 +457,73 @@ export default function NewQuotationPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {items.map((item, index) => (
-                <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                  <div className="md:col-span-5">
-                    <Label htmlFor={`description-${index}`}>Description</Label>
-                    <Input
-                      id={`description-${index}`}
-                      value={item.description}
-                      onChange={(e) => updateItem(index, "description", e.target.value)}
-                      placeholder="Item description"
-                      required
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor={`quantity-${index}`}>Quantity</Label>
-                    <Input
-                      id={`quantity-${index}`}
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => updateItem(index, "quantity", Number.parseInt(e.target.value) || 1)}
-                      required
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor={`unitPrice-${index}`}>Unit Price</Label>
-                    <Input
-                      id={`unitPrice-${index}`}
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={item.unitPrice}
-                      onChange={(e) => updateItem(index, "unitPrice", Number.parseFloat(e.target.value) || 0)}
-                      required
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label>Total</Label>
-                    <div className="h-10 flex items-center px-3 border rounded-md bg-muted">
-                      ${(item.quantity * item.unitPrice).toLocaleString()}
+                <div key={index} className="p-4 border rounded-lg space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                    <div className="md:col-span-7">
+                      <Label htmlFor={`category-${index}`}>Item</Label>
+                      <Select
+                        value={item.category}
+                        onValueChange={(value) => updateItem(index, "category", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select item" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="services">Services</SelectItem>
+                          <SelectItem value="software">Software</SelectItem>
+                          <SelectItem value="training">Training</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor={`quantity-${index}`}>Quantity</Label>
+                      <Input
+                        id={`quantity-${index}`}
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(index, "quantity", Number.parseInt(e.target.value) || 1)}
+                        required
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor={`unitPrice-${index}`}>Unit Price</Label>
+                      <Input
+                        id={`unitPrice-${index}`}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.unitPrice}
+                        onChange={(e) => updateItem(index, "unitPrice", Number.parseFloat(e.target.value) || 0)}
+                        required
+                      />
+                    </div>
+                    <div className="md:col-span-1">
+                      {items.length > 1 && (
+                        <Button type="button" variant="outline" size="sm" onClick={() => removeItem(index)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
-                  <div className="md:col-span-1">
-                    {items.length > 1 && (
-                      <Button type="button" variant="outline" size="sm" onClick={() => removeItem(index)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor={`itemDescription-${index}`}>Description</Label>
+                    <Textarea
+                      id={`itemDescription-${index}`}
+                      value={item.itemDescription}
+                      onChange={(e) => updateItem(index, "itemDescription", e.target.value)}
+                      placeholder="Detailed description of the item or service"
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">
+                      Total: <span className="font-medium">{formatCurrency(item.quantity * item.unitPrice, formData.currency)}</span>
+                    </p>
                   </div>
                 </div>
               ))}
@@ -498,7 +550,7 @@ export default function NewQuotationPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="discount">Discount ($)</Label>
+                <Label htmlFor="discount">Discount ({formData.currency})</Label>
                 <Input
                   id="discount"
                   type="number"

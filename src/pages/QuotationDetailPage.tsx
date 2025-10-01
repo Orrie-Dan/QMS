@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { useStore } from "../lib/store"
-import { generateQuotationPDF } from "../lib/pdfUtils"
+import { downloadQuotationHTML } from "../lib/pdfUtils"
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
 import { ConfirmationDialog } from "../components/ui/confirmation-dialog"
-import { ArrowLeft, Edit, Trash2, Send, Download, Loader2, FileText, User, CalendarDays, ReceiptText } from "lucide-react"
+import { ArrowLeft, Edit, Trash2, Send, Download, Loader2, User, CalendarDays, ReceiptText } from "lucide-react"
+import { formatCurrency } from "../lib/utils"
 
 export default function QuotationDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -88,10 +89,15 @@ export default function QuotationDetailPage() {
   }
 
   const handleDownload = async () => {
+    console.log("Download button clicked")
     setIsLoading(prev => ({ ...prev, download: true }))
     try {
+      console.log("Generating HTML for quotation:", quotation)
+      console.log("Company settings:", companySettings)
+      console.log("Client:", client)
       await new Promise(resolve => setTimeout(resolve, 500))
-      generateQuotationPDF(quotation, companySettings, client)
+      downloadQuotationHTML(quotation, companySettings, client)
+      console.log("HTML generation completed")
     } catch (error) {
       console.error("Error downloading quotation:", error)
       alert("Failed to download quotation. Please try again.")
@@ -204,10 +210,10 @@ export default function QuotationDetailPage() {
                     <div>
                       <p className="font-medium">{item.description}</p>
                       <p className="text-sm text-gray-600">
-                        {item.quantity} × ${item.unitPrice.toFixed(2)}
+                        {item.quantity} × {formatCurrency(item.unitPrice, quotation.currency)}
                       </p>
                     </div>
-                    <p className="font-medium">${item.total.toFixed(2)}</p>
+                    <p className="font-medium">{formatCurrency(item.total, quotation.currency)}</p>
                   </div>
                 ))}
               </div>
@@ -237,21 +243,21 @@ export default function QuotationDetailPage() {
             <CardContent className="space-y-3">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span>${quotation.subtotal.toFixed(2)}</span>
+                <span>{formatCurrency(quotation.subtotal, quotation.currency)}</span>
               </div>
               {quotation.discount > 0 && (
                 <div className="flex justify-between text-emerald-600">
                   <span>Discount:</span>
-                  <span>-${quotation.discount.toFixed(2)}</span>
+                  <span>-{formatCurrency(quotation.discount, quotation.currency)}</span>
                 </div>
               )}
               <div className="flex justify-between">
                 <span>Tax ({quotation.taxRate}%):</span>
-                <span>${quotation.taxAmount.toFixed(2)}</span>
+                <span>{formatCurrency(quotation.taxAmount, quotation.currency)}</span>
               </div>
               <div className="flex justify-between font-bold text-lg border-t pt-3 text-emerald-600">
                 <span>Total:</span>
-                <span>${quotation.total.toFixed(2)}</span>
+                <span>{formatCurrency(quotation.total, quotation.currency)}</span>
               </div>
             </CardContent>
           </Card>

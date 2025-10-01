@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice INV-2025-101</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .invoice-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background-color: white;
+            padding: 8mm;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            overflow: visible;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                background-color: white;
+            }
+            
+            .invoice-container {
+                width: 210mm;
+                min-height: 297mm;
+                margin: 0;
+                padding: 8mm;
+                border: none;
+                box-shadow: none;
+            }
+            
+            .page-break {
+                page-break-before: always;
+            }
+            
+            .no-break {
+                page-break-inside: avoid;
+            }
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6mm;
+        }
+        
+        .company-info {
+            flex: 1;
+        }
+        
+        .logo-section {
+            margin-bottom: 5mm;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 60px;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        
+        .company-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 3mm;
+            letter-spacing: 0.5px;
+        }
+        
+        .company-details {
+            font-size: 13px;
+            color: #374151;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+        
+        .invoice-section {
+            text-align: right;
+        }
+        
+        .invoice-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0066cc;
+            margin-bottom: 3mm;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        .invoice-details {
+            font-size: 13px;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+        
+        .invoice-details span {
+            font-weight: 700;
+            color: #1f2937;
+        }
+        
+        .customer-section {
+            margin-bottom: 4mm;
+        }
+        
+        .customer-header {
+            background-color: #0066cc;
+            color: white;
+            padding: 6px 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 3mm;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        
+        .customer-details {
+            font-size: 13px;
+            line-height: 1.4;
+            font-weight: 400;
+        }
+        
+        .customer-details .name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .services-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 4mm;
+        }
+        
+        .services-table th {
+            background-color: #0066cc;
+            color: white;
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 13px;
+            border: 1px solid #333;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        
+        .services-table th.center {
+            text-align: center;
+            width: 60px;
+        }
+        
+        .services-table th.right {
+            text-align: right;
+            width: 80px;
+        }
+        
+        .services-table th.quantity {
+            text-align: center;
+            width: 60px;
+        }
+        
+        .services-table th.unit-price {
+            text-align: right;
+            width: 80px;
+        }
+        
+        .services-table td {
+            padding: 8px 12px;
+            border: 1px solid #333;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.3;
+        }
+        
+        .services-table td.center {
+            text-align: center;
+        }
+        
+        .services-table td.right {
+            text-align: right;
+        }
+        
+        .services-table td.quantity {
+            text-align: center;
+        }
+        
+        .services-table td.unit-price {
+            text-align: right;
+        }
+        
+        .summary-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 3mm;
+        }
+        
+        .summary-box {
+            width: 60mm;
+            font-size: 12px;
+            font-weight: 400;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+        
+        .total-row {
+            background-color: #ffffcc;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 6px;
+            border: 1px solid #333;
+            margin-top: 2px;
+            letter-spacing: 0.3px;
+        }
+        
+        .terms-section {
+            margin-bottom: 4mm;
+        }
+        
+        .terms-header {
+            background-color: #0066cc;
+            color: white;
+            padding: 6px 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 3mm;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        
+        .terms-content {
+            font-size: 11px;
+            line-height: 1.4;
+            font-weight: 400;
+        }
+        
+        .terms-content p {
+            margin-bottom: 2px;
+        }
+        
+        .acceptance-section {
+            margin-bottom: 4mm;
+        }
+        
+        .acceptance-title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .signature-line {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .signature-x {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .signature-field {
+            border-bottom: 2px solid #333;
+            width: 70mm;
+            height: 8mm;
+        }
+        
+        .print-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .print-name-field {
+            border-bottom: 2px solid #333;
+            width: 70mm;
+            height: 8mm;
+        }
+        
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 5mm;
+        }
+        
+        .bank-details {
+            margin-top: 5mm;
+            font-size: 11px;
+            text-align: left;
+            background: #f8fafc;
+            padding: 6px 8px;
+            border-radius: 3px;
+            border: 1px solid #d1d5db;
+        }
+        
+        .bank-details .account-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1px 0;
+            padding: 1px 0;
+            min-height: 16px;
+        }
+
+        .bank-details .account-label {
+            font-weight: 500;
+            color: #6b7280;
+            font-size: 11px;
+            min-width: 80px;
+        }
+
+        .bank-details .account-value {
+            font-weight: 500;
+            color: #111827;
+            font-size: 11px;
+            text-align: right;
+            flex: 1;
+        }
+        
+        .footer-contact {
+            font-weight: 600;
+            margin: 5px 0;
+            color: #1f2937;
+        }
+        
+        .footer-thanks {
+            color: #ff6600;
+            font-weight: 700;
+            font-size: 16px;
+            margin-top: 5mm;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Header Section -->
+        <div class="header">
+            <!-- Left Side - Company Info -->
+            <div class="company-info">
+                <div class="logo-section">
+                    <div class="logo">
+                        <img src="Esri logo.jpg" alt="Esri Rwanda Logo" style="width: 100%; height: 100%; object-fit: contain;" />
+                    </div>
+                </div>
+                
+                <div class="company-details">
+                    <p>KG 7 Ave, Kigali, Rwanda</p>
+                    <p>Website: www.esri.rw</p>
+                    <p>Phone: 0788 381 900</p>
+                    <p>Email: info@esri.rw</p>
+                    <p style="margin-top: 15px;">Prepared by: Sales Team</p>
+                </div>
+            </div>
+
+            <!-- Right Side - Invoice Details -->
+            <div class="invoice-section">
+                <div class="invoice-title">INVOICE</div>
+                <div class="invoice-details">
+                    <p><span>DATE:</span> 01/10/2025</p>
+                    <p><span>INVOICE #:</span> INV-2025-101</p>
+                    <p><span>CUSTOMER ID:</span> 2</p>
+                    <p><span>DUE DATE:</span> 14/10/2025</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Section -->
+        <div class="customer-section">
+            <div class="customer-header">CUSTOMER</div>
+            <div class="customer-details">
+                <p class="name">Sarah Johnson (Tech Solutions Ltd)</p>
+                <p>456 Tech Ave, San Francisco, CA 94105</p>
+                <p>+1-555-0456</p>
+                <p>sarah@techsolutions.com</p>
+            </div>
+        </div>
+
+        <!-- Services Table -->
+        <table class="services-table">
+            <thead>
+                <tr>
+                    <th>DESCRIPTION</th>
+                    <th class="center">TAXED</th>
+                    <th class="right">AMOUNT</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Software Development</td>
+                    <td class="center">X</td>
+                    <td class="right">RWF 4,500.00</td>
+                </tr>
+                <tr>
+                    <td>SEO Optimization</td>
+                    <td class="center">X</td>
+                    <td class="right">RWF 1,500.00</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Summary Section -->
+        <div class="summary-section">
+            <div class="summary-box">
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span>RWF 6,000.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Taxable:</span>
+                    <span>RWF 6,000.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax rate:</span>
+                    <span>18%</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax due:</span>
+                    <span>RWF 1,080.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Other:</span>
+                    <span>-</span>
+                </div>
+                <div class="total-row">
+                    <span>TOTAL:</span>
+                    <span>RWF 7,080.00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terms and Conditions -->
+        <div class="terms-section">
+            <div class="terms-header">TERMS AND CONDITIONS</div>
+            <div class="terms-content">
+                <p>1. Customer will be billed after indicating acceptance of this invoice</p>
+                <p>2. Payment will be due prior to delivery of service and goods</p>
+                <p>3. Please fax or mail the signed invoice to the address above</p>
+            </div>
+        </div>
+
+        <!-- Customer Acceptance -->
+        <div class="acceptance-section">
+            <div class="acceptance-title">Customer Acceptance (sign below):</div>
+            <div class="signature-line">
+                <span class="signature-x">X</span>
+                <div class="signature-field"></div>
+            </div>
+            <div class="print-name">Print Name:</div>
+            <div class="print-name-field"></div>
+        </div>
+
+        <!-- Bank Details -->
+        <div class="bank-details">
+            <div class="account-row">
+                <span class="account-label">Bank Name and Address:</span>
+                <span class="account-value">Bank of Kigali, Head Office, Avenue de la Paix</span>
+            </div>
+            <div class="account-row">
+                <span class="account-label">P.O. Box and Location:</span>
+                <span class="account-value">P.O. Box 175, Kigali, Rwanda, SWIFT: BKIGRWRW</span>
+            </div>
+            <div class="account-row">
+                <span class="account-label">Account No.:</span>
+                <span class="account-value">00040-00314912-83 (RWF) / 00040-00314914-85 (USD)</span>
+            </div>
+            <div class="account-row">
+                <span class="account-label">Name of Account Holder:</span>
+                <span class="account-value">Esri Rwanda Ltd.</span>
+            </div>
+            <div class="account-row">
+                <span class="account-label">Reference Instruction:</span>
+                <span class="account-value">Please reference our invoice number in your correspondence!</span>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>If you have any questions about this invoice, please contact</p>
+            <p class="footer-contact">Sales Team, +250 788 123 456, info@esri.rw</p>
+            <p class="footer-thanks">Thank You For Your Business!</p>
+        </div>
+    </div>
+</body>
+</html>
