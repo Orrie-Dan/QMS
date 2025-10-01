@@ -62,9 +62,6 @@ export default function RecentQuotations() {
                     <Badge className={s.badge}>
                       {quotation.status.charAt(0).toUpperCase() + quotation.status.slice(1)}
                     </Badge>
-                    <span className="font-medium text-gray-900">
-                      ${quotation.total.toLocaleString()}
-                    </span>
                     <Link to={`/quotations/${quotation.id}`}>
                       <Button variant="outline" size="sm">
                         <Eye className="h-4 w-4" />

@@ -94,7 +94,6 @@ export default function QuotationsPage() {
                   <TableHead className="w-[160px]">Number</TableHead>
                   <TableHead>Client</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
                   <TableHead>Valid Until</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead className="w-[160px]"></TableHead>
@@ -115,7 +114,6 @@ export default function QuotationsPage() {
                       <TableCell>
                         <Badge className={s.badge}>{quotation.status}</Badge>
                       </TableCell>
-                      <TableCell className="text-right">${quotation.total.toLocaleString()}</TableCell>
                       <TableCell>{quotation.validUntil ? new Date(quotation.validUntil).toLocaleDateString() : "—"}</TableCell>
                       <TableCell>{new Date(quotation.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
@@ -160,7 +158,7 @@ export default function QuotationsPage() {
                 })}
                 {filteredQuotations.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                       No quotations found
                     </TableCell>
                   </TableRow>

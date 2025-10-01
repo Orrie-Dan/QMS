@@ -17,16 +17,66 @@ import type { QuotationItem } from "@/lib/store"
 export default function NewQuotationPage() {
   const navigate = useNavigate()
   const clients = useStore((state) => state.clients)
+  const user = useStore((state) => state.user)
+  const quotations = useStore((state) => state.quotations)
   const addQuotation = useStore((state) => state.addQuotation)
 
+  const getUserInitials = () => {
+    const name = user?.name?.trim() || ""
+    if (name) {
+      const parts = name.split(/\s+/).filter(Boolean)
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+    }
+    const email = user?.email || ""
+    if (email.includes("@")) return email.split("@")[0].slice(0, 2).toUpperCase()
+    return "XX"
+  }
+
+  const formatDateDDMMYYYY = (d: Date) => {
+    const dd = String(d.getDate()).padStart(2, "0")
+    const mm = String(d.getMonth() + 1).padStart(2, "0")
+    const yyyy = d.getFullYear()
+    return `${dd}${mm}${yyyy}`
+  }
+
+  const computeTodaySequence = () => {
+    const today = new Date()
+    const todayKey = today.toISOString().slice(0, 10)
+    const todaysCount = quotations.filter((q) => {
+      const key = new Date(q.createdAt).toISOString().slice(0, 10)
+      return key === todayKey
+    }).length
+    return String(todaysCount + 1).padStart(2, "0")
+  }
+
+  const generateQuotationNumber = () => {
+    const initials = getUserInitials()
+    const datePart = formatDateDDMMYYYY(new Date())
+    const seq = computeTodaySequence()
+    return `${initials}${datePart}-${seq}`
+  }
+
   const [formData, setFormData] = useState({
-    quotationNumber: `QUO-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`,
+    quotationNumber: generateQuotationNumber(),
     clientId: "",
     clientName: "",
     validUntil: "",
     notes: "",
     taxRate: 18,
     discount: 0,
+  })
+
+  const [clientType, setClientType] = useState<"existing" | "new">("existing")
+  const [newClientData, setNewClientData] = useState({
+    name: "",
+    fullName: "",
+    email: "",
+    phone: "",
+    address: "",
+    company: "",
+    clientType: "individual" as "individual" | "company",
+    tin: "",
   })
 
   const [items, setItems] = useState<Omit<QuotationItem, "id" | "total">[]>([
@@ -41,6 +91,22 @@ export default function NewQuotationPage() {
       clientId,
       clientName: client ? `${client.name} (${client.company || "Individual"})` : "",
     })
+  }
+
+  const handleNewClientChange = (field: string, value: string) => {
+    setNewClientData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const getClientDisplayName = () => {
+    if (clientType === "existing") {
+      return formData.clientName
+    } else {
+      const typeLabel = newClientData.clientType === "company" ? "Company" : "Individual"
+      const displayName = newClientData.clientType === "company" 
+        ? `${newClientData.name} (${newClientData.fullName})` 
+        : newClientData.name
+      return `${displayName} (${typeLabel})`
+    }
   }
 
   const addItem = () => {
@@ -80,10 +146,13 @@ export default function NewQuotationPage() {
         total: item.quantity * item.unitPrice,
       }))
 
+      // Always enforce formatted, unique number for today
+      const finalQuotationNumber = generateQuotationNumber()
+
       addQuotation({
-        quotationNumber: formData.quotationNumber,
-        clientId: formData.clientId,
-        clientName: formData.clientName,
+        quotationNumber: finalQuotationNumber,
+        clientId: clientType === "existing" ? formData.clientId : "new-client",
+        clientName: getClientDisplayName(),
         status,
         items: quotationItems,
         subtotal,
@@ -146,25 +215,160 @@ export default function NewQuotationPage() {
                 <Input
                   id="quotationNumber"
                   value={formData.quotationNumber}
-                  onChange={(e) => setFormData({ ...formData, quotationNumber: e.target.value })}
-                  required
+                  readOnly
                 />
+                <p className="text-xs text-muted-foreground">Automatically generated as [Initials][DDMMYYYY]-[Sequence]</p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="client">Client</Label>
-                <Select onValueChange={handleClientChange} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.name} ({client.company || "Individual"})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Client Type</Label>
+                  <div className="flex space-x-4">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        name="clientType"
+                        value="existing"
+                        checked={clientType === "existing"}
+                        onChange={(e) => setClientType(e.target.value as "existing" | "new")}
+                        className="rounded"
+                      />
+                      <span>Existing Client</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        name="clientType"
+                        value="new"
+                        checked={clientType === "new"}
+                        onChange={(e) => setClientType(e.target.value as "existing" | "new")}
+                        className="rounded"
+                      />
+                      <span>New Client</span>
+                    </label>
+                  </div>
+                </div>
+
+                {clientType === "existing" ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="client">Select Client</Label>
+                    <Select onValueChange={handleClientChange} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a client" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.name} ({client.company || "Individual"})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Client Type</Label>
+                      <div className="flex space-x-4">
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="newClientType"
+                            value="individual"
+                            checked={newClientData.clientType === "individual"}
+                            onChange={(e) => handleNewClientChange("clientType", e.target.value)}
+                            className="rounded"
+                          />
+                          <span>Individual</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="newClientType"
+                            value="company"
+                            checked={newClientData.clientType === "company"}
+                            onChange={(e) => handleNewClientChange("clientType", e.target.value)}
+                            className="rounded"
+                          />
+                          <span>Company</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="newClientName">
+                          {newClientData.clientType === "company" ? "Company Name" : "Full Name"} *
+                        </Label>
+                        <Input
+                          id="newClientName"
+                          value={newClientData.name}
+                          onChange={(e) => handleNewClientChange("name", e.target.value)}
+                          placeholder={newClientData.clientType === "company" ? "Acme Corporation" : "John Doe"}
+                          required
+                        />
+                      </div>
+
+                      {newClientData.clientType === "company" && (
+                        <div className="space-y-2">
+                          <Label htmlFor="newClientFullName">Full Name *</Label>
+                          <Input
+                            id="newClientFullName"
+                            value={newClientData.fullName}
+                            onChange={(e) => handleNewClientChange("fullName", e.target.value)}
+                            placeholder="John Smith"
+                            required
+                          />
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <Label htmlFor="newClientEmail">Email *</Label>
+                        <Input
+                          id="newClientEmail"
+                          type="email"
+                          value={newClientData.email}
+                          onChange={(e) => handleNewClientChange("email", e.target.value)}
+                          placeholder="john@example.com"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="newClientPhone">Phone *</Label>
+                        <Input
+                          id="newClientPhone"
+                          value={newClientData.phone}
+                          onChange={(e) => handleNewClientChange("phone", e.target.value)}
+                          placeholder="+1 (555) 123-4567"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="newClientTin">TIN Number</Label>
+                        <Input
+                          id="newClientTin"
+                          value={newClientData.tin}
+                          onChange={(e) => handleNewClientChange("tin", e.target.value)}
+                          placeholder="123456789"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2 space-y-2">
+                        <Label htmlFor="newClientAddress">Address *</Label>
+                        <Textarea
+                          id="newClientAddress"
+                          value={newClientData.address}
+                          onChange={(e) => handleNewClientChange("address", e.target.value)}
+                          placeholder="123 Business St, New York, NY 10001"
+                          rows={2}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
