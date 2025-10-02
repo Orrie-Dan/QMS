@@ -172,7 +172,6 @@ export default function NewQuotationPage() {
         clientId: clientType === "existing" ? formData.clientId : "new-client",
         clientName: getClientDisplayName(),
         status,
-        currency: formData.currency,
         items: quotationItems,
         subtotal,
         taxRate: formData.taxRate,
