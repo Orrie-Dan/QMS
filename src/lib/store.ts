@@ -7,6 +7,8 @@ export interface QuotationItem {
   quantity: number
   unitPrice: number
   total: number
+  category?: string
+  itemDescription?: string
 }
 
 export interface Quotation {
@@ -15,6 +17,7 @@ export interface Quotation {
   clientId: string
   clientName: string
   status: "draft" | "sent" | "accepted" | "rejected"
+  currency: "RWF" | "USD" | "EUR"
   items: QuotationItem[]
   subtotal: number
   taxRate: number
@@ -58,6 +61,11 @@ export interface CompanySettings {
   taxRate: number
   currency: string
   preparedBy: string
+  currencyAccounts: {
+    RWF?: string
+    USD?: string
+    EUR?: string
+  }
 }
 
 interface AppState {
@@ -96,6 +104,7 @@ const mockQuotations: Quotation[] = [
     clientId: "1",
     clientName: "Acme Corporation",
     status: "sent",
+    currency: "USD",
     items: [
       {
         id: "1",
@@ -103,6 +112,8 @@ const mockQuotations: Quotation[] = [
         quantity: 1,
         unitPrice: 5000,
         total: 5000,
+        category: "services",
+        itemDescription: "Custom website development with responsive design and modern UI/UX",
       },
       {
         id: "2",
@@ -110,6 +121,8 @@ const mockQuotations: Quotation[] = [
         quantity: 1,
         unitPrice: 1500,
         total: 1500,
+        category: "services",
+        itemDescription: "Search engine optimization services to improve website visibility",
       },
     ],
     subtotal: 6500,
@@ -127,6 +140,7 @@ const mockQuotations: Quotation[] = [
     clientId: "2",
     clientName: "Tech Solutions Ltd",
     status: "draft",
+    currency: "EUR",
     items: [
       {
         id: "3",
@@ -134,6 +148,8 @@ const mockQuotations: Quotation[] = [
         quantity: 1,
         unitPrice: 8000,
         total: 8000,
+        category: "software",
+        itemDescription: "Cross-platform mobile application development for iOS and Android",
       },
     ],
     subtotal: 8000,
@@ -178,7 +194,12 @@ const defaultCompanySettings: CompanySettings = {
   logo: "/Esri.png",
   taxRate: 18,
   currency: "RWF",
-  preparedBy: "Sales Team"
+  preparedBy: "Sales Team",
+  currencyAccounts: {
+    RWF: "00040-00314912-83",
+    USD: "00040-00314914-85",
+    EUR: "00040-00314913-84"
+  }
 }
 
 export const useStore = create<AppState>()(

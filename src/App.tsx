@@ -14,6 +14,9 @@ import ReportsPage from "./pages/ReportsPage"
 import SettingsPage from "./pages/SettingsPage"
 import InvoicePage from "./pages/InvoicePage"
 import PriceInformationPage from "./pages/PriceInformationPage"
+import NewPriceInformationPage from "./pages/NewPriceInformationPage"
+import EditPriceInformationPage from "./pages/EditPriceInformationPage"
+import EditQuotationPage from "./pages/EditQuotationPage"
 import MainLayout from "./components/layout/MainLayout"
 
 // Protected Route component
@@ -71,7 +74,10 @@ function App() {
         <Route path="clients/:id/edit" element={<EditClientPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="invoice" element={<InvoicePage />} />
+        <Route path="quotations/:id/edit" element={<EditQuotationPage />} />
         <Route path="price-information" element={<PriceInformationPage />} />
+        <Route path="price-information/new" element={<NewPriceInformationPage />} />
+        <Route path="price-information/:id/edit" element={<EditPriceInformationPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 

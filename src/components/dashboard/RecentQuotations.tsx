@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom"
 import { FileText, Eye } from "lucide-react"
+import { formatCurrency } from "../../lib/utils"
 
 const styles: Record<string, { badge: string; stripe: string; pill: string; icon: string; hover: string }> = {
   draft: { badge: "bg-gray-100 text-gray-800", stripe: "border-l-4 border-indigo-400", pill: "bg-indigo-500/10", icon: "text-indigo-500", hover: "hover:bg-indigo-500/5" },
@@ -54,7 +55,7 @@ export default function RecentQuotations() {
                       <h3 className="font-medium text-gray-900">{quotation.quotationNumber}</h3>
                       <p className="text-sm text-gray-600">{quotation.clientName}</p>
                       <p className="text-xs text-gray-500">
-                        {new Date(quotation.createdAt).toLocaleDateString()}
+                        {formatCurrency(quotation.total, quotation.currency)} • {new Date(quotation.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

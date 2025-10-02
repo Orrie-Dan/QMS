@@ -49,7 +49,7 @@ export default function PriceInformationPage() {
           <h1 className="text-3xl font-bold text-foreground">Price Information</h1>
           <p className="text-muted-foreground">Manage and track all your price information</p>
         </div>
-        <Link to="/quotations/new">
+        <Link to="/price-information/new">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             New Price
@@ -129,7 +129,7 @@ export default function PriceInformationPage() {
                             <Download className="mr-2 h-4 w-4" />
                             PDF
                           </Button>
-                          <Link to={`/quotations/${quotation.id}/edit`}>
+                          <Link to={`/price-information/${quotation.id}/edit`}>
                             <Button variant="outline" size="sm">
                               <Edit className="mr-2 h-4 w-4" />
                               Edit

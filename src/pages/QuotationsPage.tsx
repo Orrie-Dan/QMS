@@ -3,13 +3,15 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { getQuotations as apiGetQuotations, deleteQuotation as apiDeleteQuotation, type UIQuotation } from "../lib/api"
-import { generateQuotationPDF } from "../lib/pdfUtils"
+import { useStore } from "../lib/store"
+import { downloadQuotationHTML } from "../lib/pdfUtils"
 import { Button } from "../../components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
+import { Card, CardContent } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
 import { Input } from "../../components/ui/input"
-import { Plus, Search, Eye, Edit, Trash2, Download, FileText, CalendarDays, DollarSign } from "lucide-react"
+import { Plus, Search, Eye, Edit, Trash2, Download, FileText } from "lucide-react"
+import { formatCurrency } from "../lib/utils"
 
 const statusStyles: Record<string, { badge: string; border: string; pill: string; icon: string }> = {
   draft: { badge: "bg-gray-100 text-gray-800", border: "border-t-4 border-indigo-300", pill: "bg-indigo-500/10", icon: "text-indigo-500" },
@@ -43,9 +45,39 @@ export default function QuotationsPage() {
     ),
   [quotations, searchTerm])
 
-  const handleDownload = (quotation: any) => {
-    // TODO: integrate actual PDF with backend data if needed
-    alert("PDF generation can be wired to backend data later.")
+  const handleDownload = async (quotation: UIQuotation) => {
+    try {
+      // Get company settings and client data
+      const { companySettings, clients } = useStore.getState()
+      const client = clients.find(c => c.id === quotation.clientId)
+      
+      // Convert UIQuotation to Quotation format
+      const quotationData = {
+        ...quotation,
+        status: (quotation.status === "expired" ? "rejected" : quotation.status) as "draft" | "sent" | "accepted" | "rejected",
+        validUntil: quotation.validUntil ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        items: [
+          {
+            id: "1",
+            description: "Software Development",
+            quantity: 1,
+            unitPrice: quotation.total * 0.85,
+            total: quotation.total * 0.85
+          }
+        ],
+        subtotal: quotation.total * 0.85, // Approximate subtotal
+        taxRate: 18,
+        taxAmount: quotation.total * 0.15, // Approximate tax
+        discount: 0,
+        notes: "",
+        updatedAt: quotation.createdAt
+      }
+      
+      downloadQuotationHTML(quotationData, companySettings, client)
+    } catch (error) {
+      console.error("Error downloading quotation:", error)
+      alert("Failed to download quotation. Please try again.")
+    }
   }
 
   return (
@@ -126,7 +158,7 @@ export default function QuotationsPage() {
                           </Link>
                           <Button variant="outline" size="sm" onClick={() => handleDownload(quotation)}>
                             <Download className="mr-2 h-4 w-4" />
-                            PDF
+                            HTML
                           </Button>
                           <Link to={`/quotations/${quotation.id}/edit`}>
                             <Button variant="outline" size="sm">

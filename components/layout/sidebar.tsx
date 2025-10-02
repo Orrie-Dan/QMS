@@ -5,11 +5,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, FileText, Users, BarChart3, Settings, ChevronLeft, ChevronRight } from "lucide-react"
+import { LayoutDashboard, FileText, Users, BarChart3, Settings, ChevronLeft, ChevronRight, Receipt, DollarSign } from "lucide-react"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Quotations", href: "/quotations", icon: FileText },
+  { name: "Invoice", href: "/invoice", icon: Receipt },
+  { name: "Price Information", href: "/price-information", icon: DollarSign },
   { name: "Clients", href: "/clients", icon: Users },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Settings", href: "/settings", icon: Settings },
@@ -22,6 +24,8 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
+  
+  console.log("Next.js Sidebar loaded with navigation:", navigation)
 
   return (
     <div

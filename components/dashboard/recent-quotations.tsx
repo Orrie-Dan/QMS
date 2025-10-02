@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Eye, Edit, MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
+import { formatCurrency } from "@/lib/utils"
 
 const statusColors = {
   draft: {
@@ -66,7 +67,7 @@ export function RecentQuotations() {
                     </div>
                     <p className="text-sm text-muted-foreground mb-1">{quotation.clientName}</p>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>${quotation.total.toLocaleString()}</span>
+                      <span>{formatCurrency(quotation.total, quotation.currency)}</span>
                       <span>•</span>
                       <span>{new Date(quotation.updatedAt).toLocaleDateString()}</span>
                     </div>
