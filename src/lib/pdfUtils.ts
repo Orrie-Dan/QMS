@@ -1127,173 +1127,63 @@ export const generateInvoiceHTMLOptimized = (quotation: Quotation, companySettin
   `
 }
 
+export const downloadInvoiceHTML = (quotation: Quotation, companySettings: CompanySettings, client?: Client): void => {
+  const htmlContent = generateInvoiceHTMLOptimized(quotation, companySettings, client)
+  const blob = new Blob([htmlContent], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `invoice-${quotation.quotationNumber}.html`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+// Generate Invoice PDF using the styled HTML with embedded Esri logo
 export const downloadInvoicePDF = async (quotation: Quotation, companySettings: CompanySettings, client?: Client): Promise<void> => {
+  const html = generateInvoiceHTMLOptimized(quotation, companySettings, client)
+
+  // Create an offscreen container to render the HTML
+  const container = document.createElement('div')
+  container.style.position = 'fixed'
+  container.style.left = '-10000px'
+  container.style.top = '0'
+  container.style.width = '210mm'
+  container.style.background = '#ffffff'
+  container.innerHTML = html
+  document.body.appendChild(container)
+
   try {
-    console.log('Starting invoice PDF generation for:', quotation.quotationNumber)
-    
-    // Validate quotation data
-    if (!quotation || !quotation.quotationNumber) {
-      throw new Error('Invalid quotation data provided')
-    }
-    
-    if (!quotation.items || quotation.items.length === 0) {
-      throw new Error('Quotation must have at least one item')
-    }
-    
-    // Create a simple HTML content for testing
-    const formatCurrency = (amount: number) => {
-      const currencySymbols = {
-        RWF: "RWF",
-        USD: "$",
-        EUR: "€"
-      }
-      const symbol = currencySymbols[quotation.currency] || quotation.currency
-      
-      if (quotation.currency === "RWF") {
-        return `${symbol} ${Math.round(amount).toLocaleString()}`
-      }
-      
-      return `${symbol} ${amount.toFixed(2)}`
-    }
-    
-    const formatDate = (date: string) => {
-      return new Date(date).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      })
-    }
-    
-    const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .invoice-title { font-size: 24px; color: #dc2626; font-weight: bold; }
-            .company-info { margin-bottom: 20px; }
-            .customer-info { margin-bottom: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #dc2626; color: white; }
-            .total { font-weight: bold; }
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <h1 class="invoice-title">INVOICE</h1>
-            <p>Invoice #: ${quotation.quotationNumber}</p>
-            <p>Date: ${formatDate(quotation.createdAt)}</p>
-        </div>
-        
-        <div class="company-info">
-            <h3>From:</h3>
-            <p>${companySettings.name}</p>
-            <p>${companySettings.address}</p>
-            <p>Phone: ${companySettings.phone}</p>
-            <p>Email: ${companySettings.email}</p>
-        </div>
-        
-        <div class="customer-info">
-            <h3>Bill To:</h3>
-            ${client ? `
-                <p>${client.name} (${client.company})</p>
-                <p>${client.address}</p>
-                <p>Phone: ${client.phone}</p>
-                <p>Email: ${client.email}</p>
-            ` : '<p>No client information available</p>'}
-        </div>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${quotation.items.map(item => `
-                    <tr>
-                        <td>${item.description}</td>
-                        <td>${item.quantity}</td>
-                        <td>${formatCurrency(item.unitPrice)}</td>
-                        <td>${formatCurrency(item.total)}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-        
-        <div style="text-align: right;">
-            <p>Subtotal: ${formatCurrency(quotation.subtotal)}</p>
-            <p>Tax (${quotation.taxRate}%): ${formatCurrency(quotation.taxAmount)}</p>
-            <p class="total">Total Due: ${formatCurrency(quotation.total)}</p>
-        </div>
-    </body>
-    </html>
-    `
-    
-    console.log('HTML content generated, length:', htmlContent.length)
-    
-    // Create a temporary container
-    const tempContainer = document.createElement('div')
-    tempContainer.innerHTML = htmlContent
-    tempContainer.style.position = 'absolute'
-    tempContainer.style.left = '-9999px'
-    tempContainer.style.top = '-9999px'
-    tempContainer.style.width = '210mm'
-    tempContainer.style.backgroundColor = 'white'
-    tempContainer.style.fontSize = '12px'
-    document.body.appendChild(tempContainer)
-    console.log('Temporary container created and added to DOM')
-    
-    // Wait a bit for any content to load
-    await new Promise(resolve => setTimeout(resolve, 500))
-    console.log('Wait completed')
-    
-    // Import html2canvas dynamically
+    const target = container.querySelector('.invoice-container') as HTMLElement | null
+    if (!target) throw new Error('Invoice container not found')
+
     const { default: html2canvas } = await import('html2canvas')
-    console.log('html2canvas imported successfully')
-    
-    // Convert HTML to canvas with optimized settings
-    const canvas = await html2canvas(tempContainer, {
-      scale: 1.5,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      width: 794,
-      height: 1123,
-      scrollX: 0,
-      scrollY: 0
-    })
-    console.log('Canvas generated successfully, dimensions:', canvas.width, 'x', canvas.height)
-    
-    // Remove temporary container
-    document.body.removeChild(tempContainer)
-    console.log('Temporary container removed')
-    
-    // Create PDF
+    const canvas = await html2canvas(target, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff' })
+
     const imgData = canvas.toDataURL('image/png')
-    console.log('Image data generated, length:', imgData.length)
-    
     const doc = new jsPDF('p', 'mm', 'a4')
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
-    console.log('PDF document created, page size:', pageWidth, 'x', pageHeight)
-    
-    // Add single page with the image
-    doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight)
-    console.log('Image added to PDF')
-    
-    // Download the PDF
+    const imgWidth = pageWidth
+    const imgHeight = (canvas.height * pageWidth) / canvas.width
+
+    let heightLeft = imgHeight
+    let position = 0
+
+    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+    heightLeft -= pageHeight
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight
+      doc.addPage()
+      doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+      heightLeft -= pageHeight
+    }
+
     doc.save(`invoice-${quotation.quotationNumber}.pdf`)
-    console.log('PDF saved successfully')
-  } catch (error) {
-    console.error('Detailed error generating PDF:', error)
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
-    throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  } finally {
+    document.body.removeChild(container)
   }
 }
 
