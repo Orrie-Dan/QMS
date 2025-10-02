@@ -10,6 +10,7 @@ import ClientsPage from "./pages/ClientsPage"
 import NewClientPage from "./pages/NewClientPage"
 import ClientDetailPage from "./pages/ClientDetailPage"
 import EditClientPage from "./pages/EditClientPage"
+import EditQuotationPage from "./pages/EditQuotationPage"
 import ReportsPage from "./pages/ReportsPage"
 import SettingsPage from "./pages/SettingsPage"
 import MainLayout from "./components/layout/MainLayout"
@@ -63,6 +64,7 @@ function App() {
         <Route path="quotations" element={<QuotationsPage />} />
         <Route path="quotations/new" element={<NewQuotationPage />} />
         <Route path="quotations/:id" element={<QuotationDetailPage />} />
+        <Route path="quotations/:id/edit" element={<EditQuotationPage />} />
         <Route path="clients" element={<ClientsPage />} />
         <Route path="clients/new" element={<NewClientPage />} />
         <Route path="clients/:id" element={<ClientDetailPage />} />

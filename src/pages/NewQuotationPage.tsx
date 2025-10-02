@@ -12,7 +12,12 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Trash2, ArrowLeft, Loader2, Save, Send } from "lucide-react"
-import type { QuotationItem } from "@/lib/store"
+import type { QuotationItem, Quotation } from "@/lib/store"
+
+type QuotationItemForm = Omit<QuotationItem, "id" | "total"> & {
+  category: string
+  itemDescription: string
+}
 import { CURRENCY_OPTIONS, formatCurrency, type Currency } from "@/lib/utils"
 
 export default function NewQuotationPage() {
@@ -81,7 +86,7 @@ export default function NewQuotationPage() {
     tin: "",
   })
 
-  const [items, setItems] = useState<Omit<QuotationItem, "id" | "total">[]>([
+  const [items, setItems] = useState<QuotationItemForm[]>([
     { description: "", quantity: 1, unitPrice: 0, category: "", itemDescription: "" },
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -119,7 +124,7 @@ export default function NewQuotationPage() {
     setItems(items.filter((_, i) => i !== index))
   }
 
-  const updateItem = (index: number, field: keyof Omit<QuotationItem, "id" | "total">, value: string | number) => {
+  const updateItem = (index: number, field: keyof QuotationItemForm, value: string | number) => {
     const updatedItems = [...items]
     updatedItems[index] = { ...updatedItems[index], [field]: value }
     
@@ -162,7 +167,7 @@ export default function NewQuotationPage() {
       // Always enforce formatted, unique number for today
       const finalQuotationNumber = generateQuotationNumber()
 
-      addQuotation({
+      const quotationData: Omit<Quotation, "id" | "createdAt" | "updatedAt"> = {
         quotationNumber: finalQuotationNumber,
         clientId: clientType === "existing" ? formData.clientId : "new-client",
         clientName: getClientDisplayName(),
@@ -176,7 +181,9 @@ export default function NewQuotationPage() {
         total,
         validUntil: formData.validUntil,
         notes: formData.notes,
-      })
+      }
+      
+      addQuotation(quotationData)
 
       if (status === "sent") {
         alert("Quotation sent successfully!")

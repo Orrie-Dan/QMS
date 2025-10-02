@@ -104,6 +104,12 @@
             font-weight: bold;
         }
         
+        .customer-details .label {
+            font-weight: bold;
+            color: #666;
+            margin-right: 4px;
+        }
+        
         .services-table {
             width: 100%;
             border-collapse: collapse;
@@ -130,6 +136,12 @@
             width: 120px;
         }
         
+        .services-table th.description {
+            text-align: left;
+            width: 300px;
+            max-width: 300px;
+        }
+        
         .services-table td {
             padding: 12px 16px;
             border: 1px solid #333;
@@ -142,6 +154,13 @@
         
         .services-table td.right {
             text-align: right;
+        }
+        
+        .services-table td.description {
+            text-align: left;
+            max-width: 300px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         .summary-section {
@@ -291,8 +310,8 @@
             <div class="customer-details">
                 <p class="name">Sarah Johnson (Tech Solutions Ltd)</p>
                 <p>456 Tech Ave, San Francisco, CA 94105</p>
-                <p>+1-555-0456</p>
-                <p>sarah@techsolutions.com</p>
+                <p><span class="label">Phone:</span>+1-555-0456</p>
+                <p><span class="label">Email:</span>sarah@techsolutions.com</p>
             </div>
         </div>
 
@@ -300,7 +319,7 @@
         <table class="services-table">
             <thead>
                 <tr>
-                    <th>DESCRIPTION</th>
+                    <th class="description">DESCRIPTION</th>
                     <th class="center">QUANTITY</th>
                     <th class="right">UNIT PRICE</th>
                     <th class="right">AMOUNT</th>
@@ -308,7 +327,7 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>Software Development</td>
+                    <td class="description">Software Development</td>
                     <td class="center">1</td>
                     <td class="right">RWF 4,500.00</td>
                     <td class="right">RWF 4,500.00</td>

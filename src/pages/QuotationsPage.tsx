@@ -4,14 +4,13 @@ import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { getQuotations as apiGetQuotations, deleteQuotation as apiDeleteQuotation, type UIQuotation } from "../lib/api"
 import { useStore } from "../lib/store"
-import { downloadQuotationHTML } from "../lib/pdfUtils"
+import { downloadQuotationPDF } from "../lib/pdfUtils"
 import { Button } from "../../components/ui/button"
 import { Card, CardContent } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
 import { Input } from "../../components/ui/input"
-import { Plus, Search, Eye, Edit, Trash2, Download, FileText } from "lucide-react"
-import { formatCurrency } from "../lib/utils"
+import { Plus, Search, Eye, Edit, Trash2, FileText } from "lucide-react"
 
 const statusStyles: Record<string, { badge: string; border: string; pill: string; icon: string }> = {
   draft: { badge: "bg-gray-100 text-gray-800", border: "border-t-4 border-indigo-300", pill: "bg-indigo-500/10", icon: "text-indigo-500" },
@@ -45,7 +44,7 @@ export default function QuotationsPage() {
     ),
   [quotations, searchTerm])
 
-  const handleDownload = async (quotation: UIQuotation) => {
+  const handleDownloadPDF = async (quotation: UIQuotation) => {
     try {
       // Get company settings and client data
       const { companySettings, clients } = useStore.getState()
@@ -73,10 +72,10 @@ export default function QuotationsPage() {
         updatedAt: quotation.createdAt
       }
       
-      downloadQuotationHTML(quotationData, companySettings, client)
+      await downloadQuotationPDF(quotationData, companySettings, client)
     } catch (error) {
-      console.error("Error downloading quotation:", error)
-      alert("Failed to download quotation. Please try again.")
+      console.error("Error downloading PDF:", error)
+      alert("Failed to download PDF. Please try again.")
     }
   }
 
@@ -156,9 +155,9 @@ export default function QuotationsPage() {
                               View
                             </Button>
                           </Link>
-                          <Button variant="outline" size="sm" onClick={() => handleDownload(quotation)}>
-                            <Download className="mr-2 h-4 w-4" />
-                            HTML
+                          <Button variant="outline" size="sm" onClick={() => handleDownloadPDF(quotation)}>
+                            <FileText className="mr-2 h-4 w-4" />
+                            PDF
                           </Button>
                           <Link to={`/quotations/${quotation.id}/edit`}>
                             <Button variant="outline" size="sm">

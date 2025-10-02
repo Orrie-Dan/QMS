@@ -1,12 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { useStore } from "../lib/store"
-import { downloadQuotationHTML } from "../lib/pdfUtils"
+import { downloadQuotationPDF } from "../lib/pdfUtils"
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { Badge } from "../../components/ui/badge"
 import { ConfirmationDialog } from "../components/ui/confirmation-dialog"
-import { ArrowLeft, Edit, Trash2, Send, Download, Loader2, User, CalendarDays, ReceiptText } from "lucide-react"
+import { ArrowLeft, Edit, Trash2, Send, FileText, Loader2, User, CalendarDays, ReceiptText } from "lucide-react"
 import { formatCurrency } from "../lib/utils"
 
 export default function QuotationDetailPage() {
@@ -15,7 +15,7 @@ export default function QuotationDetailPage() {
   const { quotations, deleteQuotation, companySettings, clients } = useStore()
   const [isLoading, setIsLoading] = useState({
     send: false,
-    download: false,
+    downloadPdf: false,
     delete: false
   })
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -88,21 +88,20 @@ export default function QuotationDetailPage() {
     }
   }
 
-  const handleDownload = async () => {
-    console.log("Download button clicked")
-    setIsLoading(prev => ({ ...prev, download: true }))
+  const handleDownloadPDF = async () => {
+    console.log("Download PDF button clicked")
+    setIsLoading(prev => ({ ...prev, downloadPdf: true }))
     try {
-      console.log("Generating HTML for quotation:", quotation)
+      console.log("Generating PDF for quotation:", quotation)
       console.log("Company settings:", companySettings)
       console.log("Client:", client)
-      await new Promise(resolve => setTimeout(resolve, 500))
-      downloadQuotationHTML(quotation, companySettings, client)
-      console.log("HTML generation completed")
+      await downloadQuotationPDF(quotation, companySettings, client)
+      console.log("PDF generation completed")
     } catch (error) {
-      console.error("Error downloading quotation:", error)
-      alert("Failed to download quotation. Please try again.")
+      console.error("Error downloading PDF:", error)
+      alert("Failed to download PDF. Please try again.")
     } finally {
-      setIsLoading(prev => ({ ...prev, download: false }))
+      setIsLoading(prev => ({ ...prev, downloadPdf: false }))
     }
   }
 
@@ -156,15 +155,15 @@ export default function QuotationDetailPage() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={handleDownload}
-            disabled={isLoading.download}
+            onClick={handleDownloadPDF}
+            disabled={isLoading.downloadPdf}
           >
-            {isLoading.download ? (
+            {isLoading.downloadPdf ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
-              <Download className="h-4 w-4 mr-2" />
+              <FileText className="h-4 w-4 mr-2" />
             )}
-            {isLoading.download ? "Downloading..." : "Download"}
+            {isLoading.downloadPdf ? "Generating PDF..." : "Download PDF"}
           </Button>
           <Button 
             variant="destructive" 

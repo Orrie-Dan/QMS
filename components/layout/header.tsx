@@ -32,7 +32,7 @@ export function Header() {
         <div className="flex items-center gap-4">
           <div className="bg-white/10 rounded-lg p-2 flex items-center justify-center">
             <img 
-              src="/Esri logo.jpg" 
+              src="/esri-3-logo.png" 
               alt="Esri Logo" 
               className="h-8 w-auto"
             />

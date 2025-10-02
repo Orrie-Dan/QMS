@@ -162,12 +162,6 @@ export const generateQuotationHTMLOptimized = (quotation: Quotation, companySett
             color: #1f2937;
         }
         
-        .customer-details .label {
-            font-weight: 600;
-            color: #6b7280;
-            margin-right: 4px;
-        }
-        
         .services-table {
             width: 100%;
             border-collapse: collapse;
@@ -202,18 +196,12 @@ export const generateQuotationHTMLOptimized = (quotation: Quotation, companySett
         
         .services-table th.quantity {
             text-align: center;
-            width: 60px;
+            width: 50px;
         }
         
         .services-table th.unit-price {
             text-align: right;
-            width: 80px;
-        }
-        
-        .services-table th.description {
-            text-align: left;
-            width: 200px;
-            max-width: 200px;
+            width: 70px;
         }
         
         .services-table td {
@@ -243,13 +231,6 @@ export const generateQuotationHTMLOptimized = (quotation: Quotation, companySett
         
         .services-table td.unit-price {
             text-align: right;
-        }
-        
-        .services-table td.description {
-            text-align: left;
-            max-width: 200px;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
         }
         
         .summary-section {
@@ -455,8 +436,8 @@ export const generateQuotationHTMLOptimized = (quotation: Quotation, companySett
                 ${client ? `
                     <p class="name">${client.name} (${client.company})</p>
                     <p>${client.address}</p>
-                    <p><span class="label">Phone:</span>${client.phone}</p>
-                    <p><span class="label">Email:</span>${client.email}</p>
+                    <p>${client.phone}</p>
+                    <p>${client.email}</p>
                 ` : '<p>No client information available</p>'}
             </div>
         </div>
@@ -465,7 +446,7 @@ export const generateQuotationHTMLOptimized = (quotation: Quotation, companySett
         <table class="services-table">
             <thead>
                 <tr>
-                    <th class="description">DESCRIPTION</th>
+                    <th>DESCRIPTION</th>
                     <th class="quantity">QUANTITY</th>
                     <th class="unit-price">UNIT PRICE</th>
                     <th class="right">AMOUNT</th>
@@ -474,7 +455,7 @@ export const generateQuotationHTMLOptimized = (quotation: Quotation, companySett
             <tbody>
                 ${quotation.items.map(item => `
                     <tr>
-                        <td class="description">${item.description}</td>
+                        <td>${item.description}</td>
                         <td class="quantity">${item.quantity}</td>
                         <td class="unit-price">${formatCurrency(item.unitPrice)}</td>
                         <td class="right">${formatCurrency(item.total)}</td>
