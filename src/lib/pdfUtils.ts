@@ -391,7 +391,7 @@ export const generateQuotationHTML = (quotation: Quotation, companySettings: Com
             <div class="company-info">
                 <div class="logo-section">
                     <div class="logo">
-                        <img src="Esri logo.jpg" alt="Esri Rwanda Logo" style="width: 100%; height: 100%; object-fit: contain;" />
+                        <img src="/esri-3-logo.png" alt="Esri Logo" style="width: 100%; height: 100%; object-fit: contain;" />
                     </div>
                 </div>
                 
@@ -1104,6 +1104,53 @@ export const downloadInvoiceHTML = (quotation: Quotation, companySettings: Compa
   link.click()
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
+}
+
+// Generate Invoice PDF using the styled HTML with embedded Esri logo
+export const downloadInvoicePDF = async (quotation: Quotation, companySettings: CompanySettings, client?: Client): Promise<void> => {
+  const html = generateInvoiceHTML(quotation, companySettings, client)
+
+  // Create an offscreen container to render the HTML
+  const container = document.createElement('div')
+  container.style.position = 'fixed'
+  container.style.left = '-10000px'
+  container.style.top = '0'
+  container.style.width = '210mm'
+  container.style.background = '#ffffff'
+  container.innerHTML = html
+  document.body.appendChild(container)
+
+  try {
+    const target = container.querySelector('.invoice-container') as HTMLElement | null
+    if (!target) throw new Error('Invoice container not found')
+
+    const { default: html2canvas } = await import('html2canvas')
+    const canvas = await html2canvas(target, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff' })
+
+    const imgData = canvas.toDataURL('image/png')
+    const doc = new jsPDF('p', 'mm', 'a4')
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const imgWidth = pageWidth
+    const imgHeight = (canvas.height * pageWidth) / canvas.width
+
+    let heightLeft = imgHeight
+    let position = 0
+
+    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+    heightLeft -= pageHeight
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight
+      doc.addPage()
+      doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+      heightLeft -= pageHeight
+    }
+
+    doc.save(`invoice-${quotation.quotationNumber}.pdf`)
+  } finally {
+    document.body.removeChild(container)
+  }
 }
 
 export const generateQuotationPDF = (quotation: Quotation, companySettings: CompanySettings, client?: Client): void => {

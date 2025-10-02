@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Eye, Edit, Trash2, Download, FileText, Search } from "lucide-react"
-import { downloadInvoiceHTML } from "../lib/pdfUtils"
+import { downloadInvoicePDF } from "../lib/pdfUtils"
 
 export default function InvoicePage() {
   const navigate = useNavigate()
@@ -84,7 +84,7 @@ export default function InvoicePage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => downloadInvoiceHTML(q, useStore.getState().companySettings, getClient(q.clientId))}
+                        onClick={() => downloadInvoicePDF(q, useStore.getState().companySettings, getClient(q.clientId))}
                       >
                         <Download className="mr-2 h-4 w-4" />
                         PDF
