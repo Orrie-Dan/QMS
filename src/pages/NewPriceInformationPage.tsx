@@ -13,14 +13,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Trash2, ArrowLeft, Loader2, Save, Send } from "lucide-react"
 import type { QuotationItem } from "@/lib/store"
-
-type NewQuotationLine = Omit<QuotationItem, "id" | "total"> & {
-  category?: string
-  itemDescription?: string
-}
 import { CURRENCY_OPTIONS, formatCurrency, type Currency } from "@/lib/utils"
 
-export default function NewQuotationPage() {
+export default function NewPriceInformationPage() {
   const navigate = useNavigate()
   const clients = useStore((state) => state.clients)
   const user = useStore((state) => state.user)
@@ -56,21 +51,18 @@ export default function NewQuotationPage() {
     return String(todaysCount + 1).padStart(2, "0")
   }
 
-  const generateQuotationNumber = () => {
+  const generatePriceNumber = () => {
     const initials = getUserInitials()
     const datePart = formatDateDDMMYYYY(new Date())
     const seq = computeTodaySequence()
-    return `${initials}${datePart}-${seq}`
+    return `PRICE-${initials}${datePart}-${seq}`
   }
 
   const [formData, setFormData] = useState({
-    quotationNumber: generateQuotationNumber(),
+    priceNumber: generatePriceNumber(),
     clientId: "",
     clientName: "",
     validUntil: "",
-    notes: "",
-    taxRate: 18,
-    discount: 0,
     currency: "RWF" as Currency,
   })
 
@@ -86,7 +78,12 @@ export default function NewQuotationPage() {
     tin: "",
   })
 
-  const [items, setItems] = useState<NewQuotationLine[]>([
+  type NewPriceLine = Omit<QuotationItem, "id" | "total"> & {
+    category?: string
+    itemDescription?: string
+  }
+
+  const [items, setItems] = useState<NewPriceLine[]>([
     { description: "", quantity: 1, unitPrice: 0, category: "", itemDescription: "" },
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -124,7 +121,7 @@ export default function NewQuotationPage() {
     setItems(items.filter((_, i) => i !== index))
   }
 
-  const updateItem = (index: number, field: keyof NewQuotationLine, value: string | number) => {
+  const updateItem = (index: number, field: keyof NewPriceLine, value: string | number) => {
     const updatedItems = [...items]
     updatedItems[index] = { ...updatedItems[index], [field]: value }
     
@@ -133,21 +130,12 @@ export default function NewQuotationPage() {
       const categoryLabels = {
         services: "Services",
         software: "Software", 
-        training: "Training",
-        consulting: "Consulting",
-        support: "Support"
+        training: "Training"
       }
       updatedItems[index].description = categoryLabels[value as keyof typeof categoryLabels] || ""
     }
     
     setItems(updatedItems)
-  }
-
-  const calculateTotals = () => {
-    const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
-    const taxAmount = (subtotal * formData.taxRate) / 100
-    const total = subtotal + taxAmount - formData.discount
-    return { subtotal, taxAmount, total }
   }
 
   const handleSubmit = async (e: React.FormEvent, status: "draft" | "sent" = "draft") => {
@@ -158,42 +146,41 @@ export default function NewQuotationPage() {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      const { subtotal, taxAmount, total } = calculateTotals()
-
       const quotationItems: QuotationItem[] = items.map((item, index) => ({
-        ...item,
         id: (index + 1).toString(),
+        description: (item.itemDescription && item.itemDescription.trim().length > 0) ? item.itemDescription : item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
         total: item.quantity * item.unitPrice,
       }))
 
       // Always enforce formatted, unique number for today
-      const finalQuotationNumber = generateQuotationNumber()
+      const finalPriceNumber = generatePriceNumber()
 
-      const quotationData = {
-        quotationNumber: finalQuotationNumber,
+      addQuotation({
+        quotationNumber: finalPriceNumber,
         clientId: clientType === "existing" ? formData.clientId : "new-client",
         clientName: getClientDisplayName(),
         status,
-        items: quotationItems,
-        subtotal,
-        taxRate: formData.taxRate,
-        taxAmount,
-        discount: formData.discount,
-        total,
-        validUntil: formData.validUntil,
-        notes: formData.notes,
         currency: formData.currency,
-      }
+        items: quotationItems,
+        subtotal: 0,
+        taxRate: 0,
+        taxAmount: 0,
+        discount: 0,
+        total: 0,
+        validUntil: formData.validUntil,
+        notes: "",
+      } as unknown as Parameters<typeof addQuotation>[0])
 
-      addQuotation(quotationData)
       if (status === "sent") {
-        alert("Quotation sent successfully!")
+        alert("Price information sent successfully!")
       }
 
-      navigate("/quotations")
+      navigate("/price-information")
     } catch (error) {
-      console.error("Error saving quotation:", error)
-      alert("Failed to save quotation. Please try again.")
+      console.error("Error saving price information:", error)
+      alert("Failed to save price information. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -203,43 +190,41 @@ export default function NewQuotationPage() {
     handleSubmit(e, "draft")
   }
 
-  const handleSendQuotation = (e: React.FormEvent) => {
-    if (window.confirm("Are you sure you want to send this quotation to the client?")) {
+  const handleSendPriceInfo = (e: React.FormEvent) => {
+    if (window.confirm("Are you sure you want to send this price information to the client?")) {
       handleSubmit(e, "sent")
     }
   }
 
-  const { subtotal, taxAmount, total } = calculateTotals()
-
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={() => navigate("/quotations")}>
+        <Button variant="outline" onClick={() => navigate("/price-information")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">New Quotation</h1>
-          <p className="text-muted-foreground">Create a new quotation for your client</p>
+          <h1 className="text-3xl font-bold text-foreground">New Price Information</h1>
+          <p className="text-muted-foreground">Create new price information for your client</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 max-w-4xl mx-auto">
           <Card>
             <CardHeader>
-              <CardTitle>Quotation Details</CardTitle>
-              <CardDescription>Basic information about the quotation</CardDescription>
+              <CardTitle>Price Information Details</CardTitle>
+            
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="quotationNumber">Quotation Number</Label>
+                <Label htmlFor="priceNumber">Price Number</Label>
                 <Input
-                  id="quotationNumber"
-                  value={formData.quotationNumber}
+                  id="priceNumber"
+                  value={formData.priceNumber}
                   readOnly
                 />
-                <p className="text-xs text-muted-foreground">Automatically generated as [Initials][DDMMYYYY]-[Sequence]</p>
+                <p className="text-xs text-muted-foreground">Automatically generated as PRICE-[Initials][DDMMYYYY]-[Sequence]</p>
               </div>
 
               <div className="space-y-4">
@@ -266,7 +251,7 @@ export default function NewQuotationPage() {
                         onChange={(e) => setClientType(e.target.value as "existing" | "new")}
                         className="rounded"
                       />
-                      <span>New Client</span>
+                      <span>Potential Client</span>
                     </label>
                   </div>
                 </div>
@@ -424,39 +409,15 @@ export default function NewQuotationPage() {
               </div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Summary</CardTitle>
-              <CardDescription>Quotation totals and calculations</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span>Subtotal:</span>
-                <span>{formatCurrency(subtotal, formData.currency)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Tax ({formData.taxRate}%):</span>
-                <span>{formatCurrency(taxAmount, formData.currency)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Discount:</span>
-                <span>-{formatCurrency(formData.discount, formData.currency)}</span>
-              </div>
-              <div className="flex justify-between font-bold text-lg border-t pt-2">
-                <span>Total:</span>
-                <span>{formatCurrency(total, formData.currency)}</span>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
-        <Card>
+        <div className="max-w-4xl mx-auto">
+          <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Items</CardTitle>
-                <CardDescription>Add items and services to this quotation</CardDescription>
+                <CardDescription>Add items and services to this price information</CardDescription>
               </div>
               <Button type="button" onClick={addItem} variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
@@ -537,56 +498,14 @@ export default function NewQuotationPage() {
               ))}
             </div>
           </CardContent>
-        </Card>
+          </Card>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Additional Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="taxRate">Tax Rate (%)</Label>
-                <Input
-                  id="taxRate"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  value={formData.taxRate}
-                  onChange={(e) => setFormData({ ...formData, taxRate: Number.parseFloat(e.target.value) || 0 })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="discount">Discount ({formData.currency})</Label>
-                <Input
-                  id="discount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.discount}
-                  onChange={(e) => setFormData({ ...formData, discount: Number.parseFloat(e.target.value) || 0 })}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Additional notes or terms and conditions"
-                rows={4}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end space-x-4 max-w-4xl mx-auto">
           <Button 
             type="button" 
             variant="outline" 
-            onClick={() => navigate("/quotations")}
+            onClick={() => navigate("/price-information")}
             disabled={isSubmitting}
           >
             Cancel
@@ -606,7 +525,7 @@ export default function NewQuotationPage() {
           </Button>
           <Button 
             type="button" 
-            onClick={handleSendQuotation}
+            onClick={handleSendPriceInfo}
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -614,7 +533,7 @@ export default function NewQuotationPage() {
             ) : (
               <Send className="h-4 w-4 mr-2" />
             )}
-            {isSubmitting ? "Sending..." : "Send Quotation"}
+            {isSubmitting ? "Sending..." : "Send Price Information"}
           </Button>
         </div>
       </form>

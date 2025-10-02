@@ -23,9 +23,7 @@
     /* Path mapping */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@/components/*": ["./components/*"],
-      "@/lib/*": ["./lib/*"]
+      "@/*": ["./*"]
     }
   },
   "include": ["src", "app", "components", "lib"],

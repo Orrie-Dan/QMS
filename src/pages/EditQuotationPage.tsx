@@ -1,86 +1,71 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import { useStore } from "@/lib/store"
+import { useEffect, useMemo, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { useStore, type QuotationItem } from "@/lib/store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Trash2, ArrowLeft, Loader2, Save, Send } from "lucide-react"
-import type { QuotationItem } from "@/lib/store"
+import { ArrowLeft, Loader2, Save, Plus, Trash2 } from "lucide-react"
 import { CURRENCY_OPTIONS, formatCurrency, type Currency } from "@/lib/utils"
 
+type EditLine = Omit<QuotationItem, "id" | "total"> & {
+  category?: string
+  itemDescription?: string
+}
+
 export default function EditQuotationPage() {
-  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>()
   const clients = useStore((state) => state.clients)
   const quotations = useStore((state) => state.quotations)
   const updateQuotation = useStore((state) => state.updateQuotation)
 
-  const quotation = quotations.find((q) => q.id === id)
-
-  if (!quotation) {
-    return (
-      <div className="p-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Quotation not found</h1>
-          <p className="text-gray-600 mt-2">The quotation you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate("/quotations")} className="mt-4">
-            Back to Quotations
-          </Button>
-        </div>
-      </div>
-    )
-  }
+  const current = useMemo(() => quotations.find((q) => q.id === id), [quotations, id])
 
   const [formData, setFormData] = useState({
-    clientId: quotation.clientId,
+    quotationNumber: "",
+    clientId: "",
     clientName: "",
-    validUntil: quotation.validUntil,
-    notes: quotation.notes,
-    taxRate: quotation.taxRate,
-    discount: quotation.discount,
-    currency: quotation.currency as Currency,
+    validUntil: "",
+    notes: "",
+    taxRate: 18,
+    discount: 0,
+    currency: "RWF" as Currency,
+    status: "draft" as "draft" | "sent" | "accepted" | "rejected",
   })
 
-  const [clientType, setClientType] = useState<"existing" | "new">("existing")
-  const [newClientData, setNewClientData] = useState({
-    name: "",
-    fullName: "",
-    email: "",
-    phone: "",
-    address: "",
-    company: "",
-    clientType: "individual" as "individual" | "company",
-    tin: "",
-  })
-
-  const [items, setItems] = useState<Omit<QuotationItem, "id" | "total">[]>(
-    quotation.items.map(item => ({
-      description: item.description,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      category: item.category,
-      itemDescription: item.itemDescription
-    }))
-  )
+  const [items, setItems] = useState<EditLine[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Set client name on component mount
   useEffect(() => {
-    const client = clients.find((c) => c.id === quotation.clientId)
-    if (client) {
-      setFormData(prev => ({
-        ...prev,
-        clientName: `${client.name} (${client.company || "Individual"})`
+    if (!current) return
+    const match = clients.find((c) => `${c.name} (${c.company || "Individual"})` === current.clientName)
+    setFormData({
+      quotationNumber: current.quotationNumber,
+      clientId: match?.id || "",
+      clientName: current.clientName,
+      validUntil: current.validUntil,
+      notes: current.notes || "",
+      taxRate: current.taxRate,
+      discount: current.discount,
+      currency: current.currency as Currency,
+      status: current.status,
+    })
+    setItems(
+      current.items.map((it) => ({
+        description: it.description,
+        quantity: it.quantity,
+        unitPrice: it.unitPrice,
+        category: it.category,
+        itemDescription: it.itemDescription ?? it.description,
       }))
-    }
-  }, [quotation.clientId, clients])
+    )
+  }, [current, clients])
 
   const handleClientChange = (clientId: string) => {
     const client = clients.find((c) => c.id === clientId)
@@ -90,448 +75,211 @@ export default function EditQuotationPage() {
       clientName: client ? `${client.name} (${client.company || "Individual"})` : "",
     })
   }
-
-  const handleNewClientChange = (field: string, value: string) => {
-    setNewClientData(prev => ({ ...prev, [field]: value }))
-  }
-
-  const getClientDisplayName = () => {
-    if (clientType === "existing") {
-      return formData.clientName
-    } else {
-      return newClientData.name
-    }
-  }
-
   const addItem = () => {
     setItems([...items, { description: "", quantity: 1, unitPrice: 0, category: "", itemDescription: "" }])
   }
 
   const removeItem = (index: number) => {
-    if (items.length > 1) {
-      setItems(items.filter((_, i) => i !== index))
+    setItems(items.filter((_, i) => i !== index))
+  }
+
+  const updateItem = (index: number, field: keyof EditLine, value: string | number) => {
+    const updated = [...items]
+    updated[index] = { ...updated[index], [field]: value }
+    if (field === "category" && typeof value === "string") {
+      const categoryLabels = { services: "Services", software: "Software", training: "Training" }
+      updated[index].description = categoryLabels[value as keyof typeof categoryLabels] || ""
     }
+    setItems(updated)
   }
 
-  const updateItem = (index: number, field: keyof Omit<QuotationItem, "id" | "total">, value: string | number) => {
-    const newItems = [...items]
-    newItems[index] = { ...newItems[index], [field]: value }
-    setItems(newItems)
+  const calculateTotals = () => {
+    const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+    const taxAmount = (subtotal * formData.taxRate) / 100
+    const total = subtotal + taxAmount - formData.discount
+    return { subtotal, taxAmount, total }
   }
 
-  const calculateItemTotal = (item: Omit<QuotationItem, "id" | "total">) => {
-    return item.quantity * item.unitPrice
-  }
-
-  const calculateSubtotal = () => {
-    return items.reduce((sum, item) => sum + calculateItemTotal(item), 0)
-  }
-
-  const calculateTax = () => {
-    return (calculateSubtotal() * formData.taxRate) / 100
-  }
-
-  const calculateDiscount = () => {
-    return (calculateSubtotal() * formData.discount) / 100
-  }
-
-  const calculateTotal = () => {
-    return calculateSubtotal() + calculateTax() - calculateDiscount()
+  if (!current) {
+    return (
+      <div className="p-6">
+        <Button variant="outline" onClick={() => navigate("/quotations")}>Back</Button>
+        <p className="mt-4">Quotation not found.</p>
+      </div>
+    )
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-
     try {
-      const quotationData = {
-        ...formData,
-        quotationNumber: quotation.quotationNumber, // Keep original quotation number
-        items: items.map((item, index) => ({
-          ...item,
-          id: quotation.items[index]?.id || `item-${Date.now()}-${index}`,
-          total: calculateItemTotal(item)
-        })),
-        subtotal: calculateSubtotal(),
-        tax: calculateTax(),
-        discount: calculateDiscount(),
-        total: calculateTotal(),
-        status: quotation.status, // Keep existing status
-        createdAt: quotation.createdAt, // Keep original creation date
-        updatedAt: new Date().toISOString()
-      }
-
-      updateQuotation(quotation.id, quotationData)
-      navigate(`/quotations/${quotation.id}`)
-    } catch (error) {
-      console.error("Error updating quotation:", error)
+      await new Promise((r) => setTimeout(r, 500))
+      const { subtotal, taxAmount, total } = calculateTotals()
+      const updatedItems: QuotationItem[] = items.map((item, index) => ({
+        id: String(index + 1),
+        description: item.itemDescription && item.itemDescription.trim() ? item.itemDescription : item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        total: item.quantity * item.unitPrice,
+        category: item.category,
+        itemDescription: item.itemDescription,
+      }))
+      updateQuotation(current.id, {
+        quotationNumber: formData.quotationNumber,
+        clientId: formData.clientId || current.clientId,
+        clientName: formData.clientName,
+        items: updatedItems,
+        subtotal,
+        taxRate: formData.taxRate,
+        taxAmount,
+        discount: formData.discount,
+        total,
+        validUntil: formData.validUntil,
+        currency: formData.currency,
+        notes: formData.notes,
+        status: formData.status,
+      })
+      navigate("/quotations")
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === "taxRate" || name === "discount" ? parseFloat(value) || 0 : value
-    }))
-  }
-
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate("/quotations")}
-            className="flex items-center"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Edit Quotation</h1>
-            <p className="text-gray-600">Update quotation details and items</p>
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="outline" onClick={() => navigate("/quotations")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Edit Quotation</h1>
+          <p className="text-muted-foreground">Update this quotation</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>Update quotation details and client information (quotation number cannot be changed)</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Quotation Details</CardTitle>
+              <CardDescription>Update the quotation basics</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
                 <Label htmlFor="quotationNumber">Quotation Number</Label>
-                <Input
-                  id="quotationNumber"
-                  name="quotationNumber"
-                  value={formData.quotationNumber}
-                  readOnly
-                  className="bg-gray-50 cursor-not-allowed"
-                />
-                <p className="text-sm text-gray-500 mt-1">Quotation number cannot be changed</p>
+                <Input id="quotationNumber" value={formData.quotationNumber} onChange={(e) => setFormData({ ...formData, quotationNumber: e.target.value })} />
               </div>
-              <div>
+
+              <div className="space-y-2">
                 <Label htmlFor="validUntil">Valid Until</Label>
-                <Input
-                  id="validUntil"
-                  name="validUntil"
-                  type="date"
-                  value={formData.validUntil}
-                  onChange={handleChange}
-                  required
-                />
+                <Input id="validUntil" type="date" value={formData.validUntil} onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })} />
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="currency">Currency</Label>
-                <Select
-                  value={formData.currency}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value as Currency }))}
-                >
+                <Select value={formData.currency} onValueChange={(value: Currency) => setFormData({ ...formData, currency: value })}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
-                    {CURRENCY_OPTIONS.map((currency) => (
-                      <SelectItem key={currency.value} value={currency.value}>
-                        {currency.label}
+                    {CURRENCY_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={formData.status} onValueChange={(value: "draft" | "sent" | "accepted" | "rejected") => setFormData({ ...formData, status: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="sent">Sent</SelectItem>
+                    <SelectItem value="accepted">Accepted</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Totals</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
                 <Label htmlFor="taxRate">Tax Rate (%)</Label>
-                <Input
-                  id="taxRate"
-                  name="taxRate"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value={formData.taxRate}
-                  onChange={handleChange}
-                />
+                <Input id="taxRate" type="number" min="0" max="100" step="0.01" value={formData.taxRate} onChange={(e) => setFormData({ ...formData, taxRate: Number.parseFloat(e.target.value) || 0 })} />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="discount">Discount (%)</Label>
-                <Input
-                  id="discount"
-                  name="discount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value={formData.discount}
-                  onChange={handleChange}
-                />
+              <div className="space-y-2">
+                <Label htmlFor="discount">Discount ({formData.currency})</Label>
+                <Input id="discount" type="number" min="0" step="0.01" value={formData.discount} onChange={(e) => setFormData({ ...formData, discount: Number.parseFloat(e.target.value) || 0 })} />
               </div>
-            </div>
+            </CardContent>
+          </Card>
+        </div>
 
-            <div>
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                placeholder="Additional notes or terms..."
-                rows={3}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Client Selection */}
         <Card>
           <CardHeader>
-            <CardTitle>Client Information</CardTitle>
-            <CardDescription>Select an existing client or add a new one</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex space-x-4">
-              <Button
-                type="button"
-                variant={clientType === "existing" ? "default" : "outline"}
-                onClick={() => setClientType("existing")}
-              >
-                Existing Client
-              </Button>
-              <Button
-                type="button"
-                variant={clientType === "new" ? "default" : "outline"}
-                onClick={() => setClientType("new")}
-              >
-                New Client
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Items</CardTitle>
+                <CardDescription>Edit items in this quotation</CardDescription>
+              </div>
+              <Button type="button" onClick={addItem} variant="outline">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Item
               </Button>
             </div>
-
-            {clientType === "existing" ? (
-              <div>
-                <Label htmlFor="clientId">Select Client</Label>
-                <Select
-                  value={formData.clientId}
-                  onValueChange={handleClientChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.name} ({client.company || "Individual"})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {formData.clientName && (
-                  <p className="text-sm text-gray-600 mt-2">Selected: {formData.clientName}</p>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="newClientName">Client Name</Label>
-                  <Input
-                    id="newClientName"
-                    value={newClientData.name}
-                    onChange={(e) => handleNewClientChange("name", e.target.value)}
-                    placeholder="Enter client name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="newClientEmail">Email</Label>
-                  <Input
-                    id="newClientEmail"
-                    type="email"
-                    value={newClientData.email}
-                    onChange={(e) => handleNewClientChange("email", e.target.value)}
-                    placeholder="Enter email address"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="newClientPhone">Phone</Label>
-                  <Input
-                    id="newClientPhone"
-                    value={newClientData.phone}
-                    onChange={(e) => handleNewClientChange("phone", e.target.value)}
-                    placeholder="Enter phone number"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="newClientCompany">Company</Label>
-                  <Input
-                    id="newClientCompany"
-                    value={newClientData.company}
-                    onChange={(e) => handleNewClientChange("company", e.target.value)}
-                    placeholder="Enter company name"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="newClientAddress">Address</Label>
-                  <Textarea
-                    id="newClientAddress"
-                    value={newClientData.address}
-                    onChange={(e) => handleNewClientChange("address", e.target.value)}
-                    placeholder="Enter address"
-                    rows={2}
-                  />
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Items */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quotation Items</CardTitle>
-            <CardDescription>Add items and services to your quotation</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {items.map((item, index) => (
-              <div key={index} className="border rounded-lg p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium">Item {index + 1}</h4>
-                  {items.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeItem(index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor={`description-${index}`}>Description</Label>
-                    <Input
-                      id={`description-${index}`}
-                      value={item.description}
-                      onChange={(e) => updateItem(index, "description", e.target.value)}
-                      placeholder="Item description"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor={`category-${index}`}>Category</Label>
-                    <Input
-                      id={`category-${index}`}
-                      value={item.category}
-                      onChange={(e) => updateItem(index, "category", e.target.value)}
-                      placeholder="Item category"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor={`itemDescription-${index}`}>Detailed Description</Label>
-                  <Textarea
-                    id={`itemDescription-${index}`}
-                    value={item.itemDescription}
-                    onChange={(e) => updateItem(index, "itemDescription", e.target.value)}
-                    placeholder="Detailed item description"
-                    rows={2}
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor={`quantity-${index}`}>Quantity</Label>
-                    <Input
-                      id={`quantity-${index}`}
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor={`unitPrice-${index}`}>Unit Price</Label>
-                    <Input
-                      id={`unitPrice-${index}`}
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={item.unitPrice}
-                      onChange={(e) => updateItem(index, "unitPrice", parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div>
-                    <Label>Total</Label>
-                    <div className="flex items-center h-10 px-3 py-2 border border-input bg-background rounded-md text-sm">
-                      {formatCurrency(calculateItemTotal(item), formData.currency)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            <Button type="button" variant="outline" onClick={addItem} className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Item
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quotation Summary</CardTitle>
-            <CardDescription>Review the quotation totals</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Subtotal:</span>
-                <span>{formatCurrency(calculateSubtotal(), formData.currency)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Tax ({formData.taxRate}%):</span>
-                <span>{formatCurrency(calculateTax(), formData.currency)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Discount ({formData.discount}%):</span>
-                <span>-{formatCurrency(calculateDiscount(), formData.currency)}</span>
-              </div>
-              <div className="flex justify-between font-bold text-lg border-t pt-2">
-                <span>Total:</span>
-                <span>{formatCurrency(calculateTotal(), formData.currency)}</span>
-              </div>
+            <div className="space-y-6">
+              {items.map((item, index) => (
+                <div key={index} className="p-4 border rounded-lg space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                    <div className="md:col-span-7">
+                      <Label htmlFor={`desc-${index}`}>Description</Label>
+                      <Input id={`desc-${index}`} value={item.itemDescription} onChange={(e) => updateItem(index, "itemDescription", e.target.value)} placeholder="Item description" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor={`quantity-${index}`}>Quantity</Label>
+                      <Input id={`quantity-${index}`} type="number" min="1" value={item.quantity} onChange={(e) => updateItem(index, "quantity", Number.parseInt(e.target.value) || 1)} />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor={`unitPrice-${index}`}>Unit Price</Label>
+                      <Input id={`unitPrice-${index}`} type="number" min="0" step="0.01" value={item.unitPrice} onChange={(e) => updateItem(index, "unitPrice", Number.parseFloat(e.target.value) || 0)} />
+                    </div>
+                    <div className="md:col-span-1">
+                      {items.length > 1 && (
+                        <Button type="button" variant="outline" size="sm" onClick={() => removeItem(index)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">
+                      Total: <span className="font-medium">{formatCurrency(item.quantity * item.unitPrice, formData.currency)}</span>
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Actions */}
         <div className="flex justify-end space-x-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/quotations")}
-          >
-            Cancel
-          </Button>
+          <Button type="button" variant="outline" onClick={() => navigate("/quotations")}>Cancel</Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4 mr-2" />
-            )}
-            {isSubmitting ? "Updating..." : "Update Quotation"}
+            {isSubmitting ? (<Loader2 className="h-4 w-4 mr-2 animate-spin" />) : (<Save className="h-4 w-4 mr-2" />)}
+            {isSubmitting ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </form>

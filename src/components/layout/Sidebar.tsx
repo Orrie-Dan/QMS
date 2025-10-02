@@ -2,16 +2,17 @@
 
 import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
+import { useStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, FileText, Users, BarChart3, Settings, ChevronLeft, ChevronRight, Receipt, DollarSign } from "lucide-react"
+import { LayoutDashboard, FileText, Users, BarChart3, Settings, ReceiptText, Tag, LogOut, ChevronLeft, ChevronRight } from "lucide-react"
 
 // Navigation menu items
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Price Information", href: "/price-information", icon: Tag },
   { name: "Quotations", href: "/quotations", icon: FileText },
-  { name: "Invoice", href: "/invoice", icon: Receipt },
-  { name: "Price Information", href: "/price-information", icon: DollarSign },
+  { name: "Invoice", href: "/invoice", icon: ReceiptText },
   { name: "Clients", href: "/clients", icon: Users },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Settings", href: "/settings", icon: Settings },
@@ -24,8 +25,7 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
-  
-  console.log("React Router Sidebar loaded with navigation:", navigation)
+  const logout = useStore((state) => state.logout)
 
   return (
     <div
@@ -100,6 +100,17 @@ export function Sidebar({ className }: SidebarProps) {
             })}
           </ul>
         </nav>
+        {/* Bottom actions */}
+        <div className="px-6 pb-6 mt-auto">
+          <Button
+            onClick={logout}
+            variant="ghost"
+            className="w-full justify-start gap-3 text-white hover:bg-white/10 hover:text-white"
+          >
+            <LogOut className="h-5 w-5" />
+            {!collapsed && <span>Log out</span>}
+          </Button>
+        </div>
       </div>
     </div>
   )
