@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Price Information - Esri Rwanda</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .invoice-container {
+      width: 100%;
+      margin: 0;
+      background: #fff;
+      padding: 8mm;
+      box-sizing: border-box;
+    }
+    .header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: flex-start;
+      margin-bottom: 15px; 
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .company-info { 
+      font-size: 11px; 
+      line-height: 1.4; 
+      color: #374151;
+    }
+    .company-info p {
+      margin: 1px 0;
+    }
+    .invoice-title { 
+      text-align: right; 
+      font-size: 18px; 
+      font-weight: 700; 
+      color: #1e40af; 
+      margin-bottom: 5px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .invoice-details { 
+      font-size: 10px; 
+      text-align: right; 
+      line-height: 1.3; 
+    }
+    .invoice-details p {
+      margin: 2px 0;
+    }
+    .invoice-details span { 
+      font-weight: 700; 
+      color: #1f2937;
+    }
+    .section-header { 
+      background: #1e40af; 
+      color: #fff; 
+      padding: 6px 12px; 
+      font-weight: 700; 
+      font-size: 11px;
+      margin: 15px 0 8px; 
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border-radius: 3px;
+    }
+    .customer-details { 
+      font-size: 10px; 
+      line-height: 1.3; 
+      padding: 4px 0;
+    }
+    .customer-details p {
+      margin: 2px 0;
+    }
+    .customer-details span { 
+      font-weight: 600; 
+      color: #6b7280;
+      margin-right: 8px;
+    }
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin: 12px 0; 
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    th, td { 
+      border: none; 
+      padding: 8px 12px; 
+      font-size: 10px; 
+    }
+    th { 
+      background: #1e40af; 
+      color: #fff; 
+      text-align: left; 
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    td { 
+      border-bottom: 1px solid #e5e7eb;
+      font-weight: 400;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    td.center { text-align: center; }
+    td.right { text-align: right; }
+    .footer { 
+      text-align: center; 
+      font-size: 10px; 
+      margin-top: 20px; 
+      padding-top: 10px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .footer p {
+      margin: 3px 0;
+    }
+    .thanks { 
+      color: #1e40af; 
+      font-weight: 700; 
+      margin-top: 8px; 
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice-container">
+    <div class="header">
+      <div class="company-info">
+        <img src="/Esri logo.jpg" alt="Esri Logo" width="100"><br>
+        KG 7 Ave, Kigali, Rwanda<br>
+        Website: www.esri.rw<br>
+        Phone: 0788 381 900<br>
+        Email: info@esri.rw<br><br>
+        Prepared by: Sales Team
+      </div>
+      <div class="invoice-details">
+        <div class="invoice-title">PRICE INFORMATION</div>
+        <p><span>DATE:</span> {{DATE}}</p>
+        <p><span>REFERENCE #:</span> {{REFERENCE_NUMBER}}</p>
+        <p><span>CUSTOMER ID:</span> {{CUSTOMER_ID}}</p>
+        <p><span>VALID UNTIL:</span> {{VALID_UNTIL}}</p>
+      </div>
+    </div>
+
+    <div class="section-header">CUSTOMER</div>
+    <div class="customer-details">
+      <p><span>Name:</span> {{CLIENT_NAME}}</p>
+      <p><span>Address:</span> {{CLIENT_ADDRESS}}</p>
+      <p><span>Phone:</span> {{CLIENT_PHONE}}</p>
+      <p><span>Email:</span> {{CLIENT_EMAIL}}</p>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>DESCRIPTION</th>
+          <th class="center">QUANTITY</th>
+          <th class="right">UNIT PRICE</th>
+          <th class="right">TOTAL PRICE</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ITEM_ROWS}}
+      </tbody>
+    </table>
+
+
+    <div class="footer">
+      If you have any questions about this price information, please contact<br>
+      <b>Sales Team, +250 788 123 456, info@esri.rw</b>
+      <div class="thanks">We Look Forward To Working With You!</div>
+    </div>
+  </div>
+</body>
+</html>

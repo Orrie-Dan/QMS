@@ -1,6 +1,6 @@
-import StatsCards from "@/src/components/dashboard/StatsCards"
-import RecentQuotations from "@/src/components/dashboard/RecentQuotations"
-import QuickActions from "@/src/components/dashboard/QuickActions"
+import StatsCards from "@/components/dashboard/StatsCards"
+import RecentQuotations from "@/components/dashboard/RecentQuotations"
+import QuickActions from "@/components/dashboard/QuickActions"
 
 export default function DashboardPage() {
   return (

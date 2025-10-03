@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice - Esri Rwanda</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .invoice-container {
+      max-width: 850px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border: 1px solid #ccc;
+    }
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .company-info {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .invoice-title {
+      text-align: right;
+      font-size: 22px;
+      font-weight: bold;
+      color: #1d4ed8;
+    }
+    .invoice-details {
+      font-size: 13px;
+      text-align: right;
+      line-height: 1.6;
+    }
+    .invoice-details span {
+      font-weight: bold;
+    }
+    /* Section Headers */
+    .section-header {
+      background: #1d4ed8;
+      color: #fff;
+      padding: 8px 12px;
+      font-weight: bold;
+      margin: 20px 0 10px;
+    }
+    /* Customer */
+    .customer-details {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .customer-details span {
+      font-weight: bold;
+    }
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 10px;
+      font-size: 14px;
+    }
+    th {
+      background: #1d4ed8;
+      color: #fff;
+      text-align: left;
+    }
+    td.center { text-align: center; }
+    td.right { text-align: right; }
+    /* Totals */
+    .summary {
+      max-width: 300px;
+      margin-left: auto;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 0;
+    }
+    .total {
+      background: #fef08a;
+      font-weight: bold;
+      padding: 8px;
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+    /* Terms */
+    .terms {
+      font-size: 14px;
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+    /* Acceptance */
+    .acceptance {
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    .signature {
+      margin-top: 15px;
+    }
+    .signature-line {
+      border-bottom: 1px solid #000;
+      width: 300px;
+      height: 20px;
+      display: inline-block;
+      margin-left: 10px;
+    }
+    /* Bank details */
+    .bank-details {
+      background: #f8fafc;
+      border: 1px solid #ddd;
+      padding: 12px;
+      font-size: 13px;
+      margin-top: 25px;
+      line-height: 1.6;
+    }
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 14px;
+      margin-top: 30px;
+    }
+    .thanks {
+      color: #f97316;
+      font-weight: bold;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="company-info">
+        <img src="/Esri logo.jpg" alt="Esri Logo" width="100"><br>
+        KG 7 Ave, Kigali, Rwanda<br>
+        Website: www.esri.rw<br>
+        Phone: 0788 381 900<br>
+        Email: info@esri.rw<br><br>
+        Prepared by: Sales Team
+      </div>
+      <div class="invoice-details">
+        <div class="invoice-title">INVOICE</div>
+        <p><span>DATE:</span> 01/09/2024</p>
+        <p><span>INVOICE #:</span> QUO-2024-001</p>
+        <p><span>CUSTOMER ID:</span> 1</p>
+        <p><span>DUE DATE:</span> 31/12/2024</p>
+      </div>
+    </div>
+
+    <!-- Customer -->
+    <div class="section-header">CUSTOMER</div>
+    <div class="customer-details">
+      <p><span>Name:</span> Acme Corporation</p>
+      <p><span>Address:</span> 123 Business St, New York, NY 10001</p>
+      <p><span>Phone:</span> +1-555-0123</p>
+      <p><span>Email:</span> john@acmecorp.com</p>
+    </div>
+
+    <!-- Services Table -->
+    <table>
+      <thead>
+        <tr>
+          <th>DESCRIPTION</th>
+          <th class="center">QUANTITY</th>
+          <th class="right">UNIT PRICE</th>
+          <th class="right">AMOUNT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Website Development</td>
+          <td class="center">1</td>
+          <td class="right">5000.00</td>
+          <td class="right">5000.00</td>
+        </tr>
+        <tr>
+          <td>SEO Optimization</td>
+          <td class="center">1</td>
+          <td class="right">1500.00</td>
+          <td class="right">1500.00</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Summary -->
+    <div class="summary">
+      <div class="summary-row"><span>Subtotal:</span><span>6500.00</span></div>
+      <div class="summary-row"><span>Taxable:</span><span>6500.00</span></div>
+      <div class="summary-row"><span>Tax rate:</span><span>18%</span></div>
+      <div class="summary-row"><span>Tax due:</span><span>1170.00</span></div>
+      <div class="summary-row"><span>Other:</span><span>-</span></div>
+      <div class="total"><span>TOTAL:</span><span>7670.00</span></div>
+    </div>
+
+    <!-- Terms -->
+    <div class="section-header">TERMS AND CONDITIONS</div>
+    <div class="terms">
+      1. Customer will be billed after indicating acceptance of this invoice<br>
+      2. Payment will be due prior to delivery of service and goods<br>
+      3. Please fax or mail the signed invoice to the address above
+    </div>
+
+    <!-- Acceptance -->
+    <div class="acceptance">
+      <p><b>Customer Acceptance (sign below):</b></p>
+      <div class="signature">X<span class="signature-line"></span></div><br><br>
+      <b>Print Name:</b><br>
+      <div class="signature-line"></div>
+    </div>
+
+    <!-- Bank details -->
+    <div class="bank-details">
+      <b>Bank Name and Address:</b> Bank of Kigali, Head Office, Avenue de la Paix<br>
+      <b>P.O. Box and Location:</b> P.O. Box 175, Kigali, Rwanda, SWIFT: BKIGRWRW<br>
+      <b>Account No.:</b> 00040-00314912-83 (RWF) / 00040-00314914-85 (USD) /00040-00314913-84 (EUR)<br>
+      <b>Name of Account Holder:</b> Esri Rwanda Ltd.<br>
+      <b>Reference Instruction:</b> Please reference our invoice number in your correspondence!
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      If you have any questions about this invoice, please contact<br>
+      <b>Sales Team, +250 788 123 456, info@esri.rw</b>
+      <div class="thanks">Thank You For Your Business!</div>
+    </div>
+  </div>
+</body>
+</html>

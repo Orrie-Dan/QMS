@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom"
-import { Sidebar } from "./Sidebar"
+import { Sidebar } from "./Sidebar.tsx"
 import { Header } from "./Header"
 
 export default function MainLayout() {

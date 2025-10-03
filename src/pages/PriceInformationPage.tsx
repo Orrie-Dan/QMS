@@ -3,12 +3,15 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { getQuotations as apiGetQuotations, deleteQuotation as apiDeleteQuotation, type UIQuotation } from "../lib/api"
-import { Button } from "../../components/ui/button"
-import { Card, CardContent } from "../../components/ui/card"
-import { Badge } from "../../components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
-import { Input } from "../../components/ui/input"
-import { Plus, Search, Eye, Edit, Trash2, Download, FileText, CheckCircle, XCircle, Send } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
+import { Plus, Search, Eye, Edit, Trash2, Download, FileText, CheckCircle, XCircle, Send, MoreHorizontal } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { downloadPriceInformationPDF } from "../lib/pdfUtils"
+import { useStore } from "../lib/store"
 
 const statusStyles: Record<string, { badge: string; border: string; pill: string; icon: string }> = {
   draft: { badge: "bg-gray-100 text-gray-800", border: "border-t-4 border-indigo-300", pill: "bg-indigo-500/10", icon: "text-indigo-500" },
@@ -140,6 +143,7 @@ export default function PriceInformationPage() {
                       <TableCell>{new Date(quotation.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-2">
+                          {/* Visible actions - View and PDF */}
                           <Link to={`/quotations/${quotation.id}`}>
                             <Button variant="outline" size="sm">
                               <Eye className="mr-2 h-4 w-4" />
@@ -150,76 +154,109 @@ export default function PriceInformationPage() {
                             variant="outline"
                             size="sm"
                             onClick={async () => {
-                              // Mirror behavior: here we could generate a PDF or similar if needed
-                              alert("PDF generation can be wired to backend data later.")
+                              try {
+                                // Convert UIQuotation to Quotation format
+                                const quotationData = {
+                                  ...quotation,
+                                  status: (quotation.status === "expired" ? "rejected" : quotation.status) as "draft" | "sent" | "accepted" | "rejected",
+                                  validUntil: quotation.validUntil ?? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                                  items: [
+                                    {
+                                      id: "1",
+                                      description: "Software Development",
+                                      quantity: 1,
+                                      unitPrice: quotation.total * 0.85,
+                                      total: quotation.total * 0.85
+                                    }
+                                  ],
+                                  subtotal: quotation.total * 0.85,
+                                  taxRate: 18,
+                                  taxAmount: quotation.total * 0.15,
+                                  discount: 0,
+                                  notes: "",
+                                  updatedAt: quotation.createdAt
+                                }
+                                
+                                // Get company settings and client data
+                                const { companySettings, clients } = useStore.getState()
+                                const client = clients.find(c => c.id === quotation.clientId)
+                                
+                                await downloadPriceInformationPDF(quotationData, companySettings, client)
+                              } catch (error) {
+                                console.error("Error downloading PDF:", error)
+                                alert("Failed to download PDF. Please try again.")
+                              }
                             }}
                           >
                             <Download className="mr-2 h-4 w-4" />
                             PDF
                           </Button>
-                          <Link to={`/price-information/${quotation.id}/edit`}>
-                            <Button variant="outline" size="sm">
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </Button>
-                          </Link>
                           
-                          {/* Quick Status Update Buttons */}
-                          {quotation.status === 'draft' && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleStatusUpdate(quotation.id, 'sent')}
-                              disabled={updatingStatus === quotation.id}
-                              className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                            >
-                              <Send className="mr-2 h-4 w-4" />
-                              Send
-                            </Button>
-                          )}
-                          
-                          {quotation.status === 'sent' && (
-                            <>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleStatusUpdate(quotation.id, 'accepted')}
-                                disabled={updatingStatus === quotation.id}
-                                className="text-green-600 border-green-600 hover:bg-green-50"
-                              >
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                Accept
+                          {/* More actions dropdown */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
                               </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleStatusUpdate(quotation.id, 'rejected')}
-                                disabled={updatingStatus === quotation.id}
-                                className="text-red-600 border-red-600 hover:bg-red-50"
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link to={`/price-information/${quotation.id}/edit`} className="flex items-center">
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit
+                                </Link>
+                              </DropdownMenuItem>
+                              
+                              {/* Status-specific actions */}
+                              {quotation.status === 'draft' && (
+                                <DropdownMenuItem 
+                                  onClick={() => handleStatusUpdate(quotation.id, 'sent')}
+                                  disabled={updatingStatus === quotation.id}
+                                  className="text-blue-600"
+                                >
+                                  <Send className="mr-2 h-4 w-4" />
+                                  Send
+                                </DropdownMenuItem>
+                              )}
+                              
+                              {quotation.status === 'sent' && (
+                                <>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleStatusUpdate(quotation.id, 'accepted')}
+                                    disabled={updatingStatus === quotation.id}
+                                    className="text-green-600"
+                                  >
+                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                    Accept
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleStatusUpdate(quotation.id, 'rejected')}
+                                    disabled={updatingStatus === quotation.id}
+                                    className="text-red-600"
+                                  >
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    Reject
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              
+                              <DropdownMenuItem 
+                                onClick={async () => {
+                                  try {
+                                    await apiDeleteQuotation(quotation.id)
+                                    setQuotations((prev) => prev.filter((q) => q.id !== quotation.id))
+                                  } catch (e) {
+                                    console.error(e)
+                                    alert("Failed to delete item")
+                                  }
+                                }}
+                                className="text-destructive focus:text-destructive"
                               >
-                                <XCircle className="mr-2 h-4 w-4" />
-                                Reject
-                              </Button>
-                            </>
-                          )}
-                          
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              try {
-                                await apiDeleteQuotation(quotation.id)
-                                setQuotations((prev) => prev.filter((q) => q.id !== quotation.id))
-                              } catch (e) {
-                                console.error(e)
-                                alert("Failed to delete item")
-                              }
-                            }}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </Button>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>

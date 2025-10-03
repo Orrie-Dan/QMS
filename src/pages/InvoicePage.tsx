@@ -1,12 +1,12 @@
-import { useMemo, useState, useEffect } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useMemo, useState } from "react"
+import { Link } from "react-router-dom"
 import { useStore } from "@/lib/store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Eye, Edit, Trash2, Download, FileText, Search, CheckCircle, XCircle, Send } from "lucide-react"
+import { Eye, Download, FileText, Search } from "lucide-react"
 import { downloadInvoicePDF } from "../lib/pdfUtils"
 
 const statusStyles: Record<string, { badge: string; border: string; pill: string; icon: string }> = {
@@ -17,10 +17,8 @@ const statusStyles: Record<string, { badge: string; border: string; pill: string
 }
 
 export default function InvoicePage() {
-  const navigate = useNavigate()
-  const { quotations, clients, companySettings, deleteQuotation, updateQuotation } = useStore()
+  const { quotations, clients, companySettings } = useStore()
   const [searchTerm, setSearchTerm] = useState("")
-  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
 
   const data = useMemo(() =>
     quotations.filter(
@@ -31,25 +29,6 @@ export default function InvoicePage() {
   [quotations, searchTerm])
 
   const getClient = (clientId: string) => clients.find((c) => c.id === clientId)
-
-  const handleStatusUpdate = async (quotationId: string, newStatus: "draft" | "sent" | "accepted" | "rejected") => {
-    setUpdatingStatus(quotationId)
-    try {
-      // Update quotation status using the store
-      updateQuotation(quotationId, { status: newStatus })
-      
-      console.log(`Updating quotation ${quotationId} status to ${newStatus}`)
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-    } catch (error) {
-      console.error("Error updating status:", error)
-      alert("Failed to update status. Please try again.")
-    } finally {
-      setUpdatingStatus(null)
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -124,67 +103,6 @@ export default function InvoicePage() {
                         >
                           <Download className="mr-2 h-4 w-4" />
                           PDF
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/quotations/${q.id}/edit`)}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </Button>
-                        
-                        {/* Quick Status Update Buttons */}
-                        {q.status === 'draft' && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleStatusUpdate(q.id, 'sent')}
-                            disabled={updatingStatus === q.id}
-                            className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                          >
-                            <Send className="mr-2 h-4 w-4" />
-                            Send
-                          </Button>
-                        )}
-                        
-                        {q.status === 'sent' && (
-                          <>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleStatusUpdate(q.id, 'accepted')}
-                              disabled={updatingStatus === q.id}
-                              className="text-green-600 border-green-600 hover:bg-green-50"
-                            >
-                              <CheckCircle className="mr-2 h-4 w-4" />
-                              Accept
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleStatusUpdate(q.id, 'rejected')}
-                              disabled={updatingStatus === q.id}
-                              className="text-red-600 border-red-600 hover:bg-red-50"
-                            >
-                              <XCircle className="mr-2 h-4 w-4" />
-                              Reject
-                            </Button>
-                          </>
-                        )}
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (window.confirm("Delete this quotation?")) {
-                              deleteQuotation(q.id)
-                            }
-                          }}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
                         </Button>
                       </div>
                     </TableCell>

@@ -25,6 +25,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLe
 import { PieChart, Pie, Cell, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart as RechartsLineChart, Line, ResponsiveContainer } from "recharts"
 import { generateReportsPDF, generateReportsPDFModern, generateAnalyticsPDF } from "../lib/pdfUtils"
 import { calculateAnalytics, formatCurrency, formatPercentage, formatNumber } from "../lib/analytics"
+import { generateExcelReport, generateQuotationsExcel, generateClientsExcel } from "../lib/excelUtils"
 
 export default function ReportsPage() {
   const { quotations, clients, companySettings } = useStore()
@@ -97,9 +98,39 @@ export default function ReportsPage() {
     averageValue: data.averageValue
   }))
 
-  // Export report function
-  const handleExportReport = () => {
+  // Export functions
+  const handleExportPDF = () => {
     generateAnalyticsPDF(quotations, clients, companySettings)
+  }
+
+  const handleExportExcel = () => {
+    try {
+      const filename = generateExcelReport(quotations, clients, companySettings)
+      alert(`Excel report exported successfully as: ${filename}`)
+    } catch (error) {
+      console.error('Error exporting Excel report:', error)
+      alert('Failed to export Excel report. Please try again.')
+    }
+  }
+
+  const handleExportQuotationsExcel = () => {
+    try {
+      const filename = generateQuotationsExcel(quotations)
+      alert(`Quotations exported successfully as: ${filename}`)
+    } catch (error) {
+      console.error('Error exporting quotations:', error)
+      alert('Failed to export quotations. Please try again.')
+    }
+  }
+
+  const handleExportClientsExcel = () => {
+    try {
+      const filename = generateClientsExcel(clients, quotations)
+      alert(`Clients exported successfully as: ${filename}`)
+    } catch (error) {
+      console.error('Error exporting clients:', error)
+      alert('Failed to export clients. Please try again.')
+    }
   }
 
   return (
@@ -110,10 +141,16 @@ export default function ReportsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Reports & Analytics</h1>
           <p className="text-gray-600">Comprehensive insights into your quotation business</p>
         </div>
-        <Button className="flex items-center" onClick={handleExportReport}>
-          <Download className="h-4 w-4 mr-2" />
-          Export Report
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex items-center" onClick={handleExportPDF}>
+            <Download className="h-4 w-4 mr-2" />
+            Export PDF
+          </Button>
+          <Button className="flex items-center" onClick={handleExportExcel}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Excel
+          </Button>
+        </div>
       </div>
 
       {/* Key Metrics Overview */}

@@ -27,6 +27,8 @@ export const generateQuotationHTMLOptimized = (quotation: Quotation, companySett
     return `${symbol} ${amount.toFixed(2)}`
   }
 
+  const accountNumber = companySettings?.currencyAccounts?.[quotation.currency]
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -535,7 +537,7 @@ export const generateQuotationHTMLOptimized = (quotation: Quotation, companySett
         </div>
 
         <!-- Bank Details -->
-        ${companySettings.currencyAccounts[quotation.currency] ? `
+        ${accountNumber ? `
         <div class="bank-details">
             <div class="account-row">
                 <span class="account-label">Bank Name and Address:</span>
@@ -551,7 +553,7 @@ export const generateQuotationHTMLOptimized = (quotation: Quotation, companySett
             </div>
             <div class="account-row">
                 <span class="account-label">Account No.:</span>
-                <span class="account-value">${companySettings.currencyAccounts[quotation.currency]} (${quotation.currency})</span>
+                <span class="account-value">${accountNumber} (${quotation.currency})</span>
             </div>
             <div class="account-row">
                 <span class="account-label">Name of Account Holder:</span>
@@ -600,6 +602,8 @@ export const generateInvoiceHTMLOptimized = (quotation: Quotation, companySettin
     
     return `${symbol} ${amount.toFixed(2)}`
   }
+
+  const accountNumber = companySettings?.currencyAccounts?.[quotation.currency]
 
   return `
 <!DOCTYPE html>
@@ -1086,7 +1090,7 @@ export const generateInvoiceHTMLOptimized = (quotation: Quotation, companySettin
         </div>
 
         <!-- Bank Details -->
-        ${companySettings.currencyAccounts[quotation.currency] ? `
+        ${accountNumber ? `
         <div class="bank-details">
             <div class="account-row">
                 <span class="account-label">Bank Name and Address:</span>
@@ -1102,7 +1106,7 @@ export const generateInvoiceHTMLOptimized = (quotation: Quotation, companySettin
             </div>
             <div class="account-row">
                 <span class="account-label">Account No.:</span>
-                <span class="account-value">${companySettings.currencyAccounts[quotation.currency]} (${quotation.currency})</span>
+                <span class="account-value">${accountNumber} (${quotation.currency})</span>
             </div>
             <div class="account-row">
                 <span class="account-label">Name of Account Holder:</span>
@@ -1127,8 +1131,366 @@ export const generateInvoiceHTMLOptimized = (quotation: Quotation, companySettin
   `
 }
 
-export const downloadInvoiceHTML = (quotation: Quotation, companySettings: CompanySettings, client?: Client): void => {
-  const htmlContent = generateInvoiceHTMLOptimized(quotation, companySettings, client)
+// Load the template file and replace placeholders
+export const generateInvoiceFromTemplate = async (quotation: Quotation, companySettings: CompanySettings, client?: Client): Promise<string> => {
+  try {
+    // Load the template file
+    const response = await fetch('/test_invoice_editable.html')
+    let template = await response.text()
+    
+    const formatDate = (date: string) => {
+      return new Date(date).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+    }
+
+    const formatCurrency = (amount: number) => {
+      const currencySymbols = {
+        RWF: "RWF",
+        USD: "$",
+        EUR: "€"
+      }
+      const symbol = currencySymbols[quotation.currency] || quotation.currency
+      
+      if (quotation.currency === "RWF") {
+        return `${symbol} ${Math.round(amount).toLocaleString()}`
+      }
+      
+      return `${symbol} ${amount.toFixed(2)}`
+    }
+
+    // Load the actual Esri logo image and convert to data URL
+    try {
+      const logoResponse = await fetch('/Esri logo.jpg')
+      const logoBlob = await logoResponse.blob()
+      const logoDataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(logoBlob)
+      })
+      // Replace any img tag with Esri logo (smaller size for single page)
+      template = template.replace(/<img[^>]*src="[^"]*Esri logo\.jpg"[^>]*>/g, `<img src="${logoDataUrl}" alt="Esri Logo" width="80" style="margin-bottom: 5px;">`)
+    } catch (error) {
+      console.error('Error loading logo:', error)
+    }
+
+    // Remove unnecessary margins and make content fill the page
+    template = template.replace(/max-width: 850px/g, 'max-width: 100%')
+    template = template.replace(/max-width: 800px/g, 'max-width: 100%')
+    template = template.replace(/margin: auto/g, 'margin: 0')
+    template = template.replace(/padding: 30px/g, 'padding: 10px')
+    template = template.replace(/padding: 40px/g, 'padding: 10px')
+    template = template.replace(/margin: 20px/g, 'margin: 5px')
+    template = template.replace(/margin: 30px/g, 'margin: 5px')
+    template = template.replace(/line-height: 1\.6/g, 'line-height: 1.3')
+    template = template.replace(/line-height: 1\.5/g, 'line-height: 1.2')
+
+    // Replace placeholders with actual data
+    template = template.replace('01/09/2024', formatDate(quotation.createdAt))
+    template = template.replace('QUO-2024-001', quotation.quotationNumber)
+    template = template.replace('1', quotation.clientId)
+    template = template.replace('31/12/2024', formatDate(quotation.validUntil))
+    
+    // Replace customer details
+    if (client) {
+      template = template.replace('Acme Corporation', client.name)
+      template = template.replace('123 Business St, New York, NY 10001', client.address)
+      template = template.replace('+1-555-0123', client.phone)
+      template = template.replace('john@acmecorp.com', client.email)
+    }
+    
+    // Replace items in the table
+    const itemsHtml = quotation.items.map(item => `
+        <tr>
+          <td>${item.description}</td>
+          <td class="center">${item.quantity}</td>
+          <td class="right">${formatCurrency(item.unitPrice)}</td>
+          <td class="right">${formatCurrency(item.total)}</td>
+        </tr>
+      `).join('')
+    
+    // Replace the table body
+    template = template.replace(
+      /<tbody>[\s\S]*?<\/tbody>/,
+      `<tbody>${itemsHtml}</tbody>`
+    )
+    
+    // Replace summary values
+    template = template.replace('6500.00', formatCurrency(quotation.subtotal))
+    template = template.replace('6500.00', formatCurrency(quotation.subtotal))
+    template = template.replace('18%', `${quotation.taxRate}%`)
+    template = template.replace('1170.00', formatCurrency(quotation.taxAmount))
+    template = template.replace('7670.00', formatCurrency(quotation.total))
+    
+    return template
+  } catch (error) {
+    console.error('Error loading template:', error)
+    // Fallback to the original generated HTML
+    return generateInvoiceHTMLOptimized(quotation, companySettings, client)
+  }
+}
+
+// Generate quotation from template (same as invoice but for quotations)
+export const generateQuotationFromTemplate = async (quotation: Quotation, companySettings: CompanySettings, client?: Client): Promise<string> => {
+  try {
+    // Load the template file
+    const response = await fetch('/test_invoice_editable.html')
+    let template = await response.text()
+    
+    const formatDate = (date: string) => {
+      return new Date(date).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+    }
+
+    const formatCurrency = (amount: number) => {
+      const currencySymbols = {
+        RWF: "RWF",
+        USD: "$",
+        EUR: "€"
+      }
+      const symbol = currencySymbols[quotation.currency] || quotation.currency
+      
+      if (quotation.currency === "RWF") {
+        return `${symbol} ${Math.round(amount).toLocaleString()}`
+      }
+      
+      return `${symbol} ${amount.toFixed(2)}`
+    }
+
+    // Load the actual Esri logo image and convert to data URL
+    try {
+      const logoResponse = await fetch('/Esri logo.jpg')
+      const logoBlob = await logoResponse.blob()
+      const logoDataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(logoBlob)
+      })
+      // Replace any img tag with Esri logo (smaller size for single page)
+      template = template.replace(/<img[^>]*src="[^"]*Esri logo\.jpg"[^>]*>/g, `<img src="${logoDataUrl}" alt="Esri Logo" width="80" style="margin-bottom: 5px;">`)
+    } catch (error) {
+      console.error('Error loading logo:', error)
+    }
+
+    // Remove unnecessary margins and make content fill the page
+    template = template.replace(/max-width: 850px/g, 'max-width: 100%')
+    template = template.replace(/max-width: 800px/g, 'max-width: 100%')
+    template = template.replace(/margin: auto/g, 'margin: 0')
+    template = template.replace(/padding: 30px/g, 'padding: 10px')
+    template = template.replace(/padding: 40px/g, 'padding: 10px')
+    template = template.replace(/margin: 20px/g, 'margin: 5px')
+    template = template.replace(/margin: 30px/g, 'margin: 5px')
+    template = template.replace(/line-height: 1\.6/g, 'line-height: 1.3')
+    template = template.replace(/line-height: 1\.5/g, 'line-height: 1.2')
+
+    // Replace placeholders with actual data
+    template = template.replace('01/09/2024', formatDate(quotation.createdAt))
+    template = template.replace('QUO-2024-001', quotation.quotationNumber)
+    template = template.replace('1', quotation.clientId)
+    template = template.replace('31/12/2024', formatDate(quotation.validUntil))
+    
+    // Replace customer details
+    if (client) {
+      template = template.replace('Acme Corporation', client.name)
+      template = template.replace('123 Business St, New York, NY 10001', client.address)
+      template = template.replace('+1-555-0123', client.phone)
+      template = template.replace('john@acmecorp.com', client.email)
+    }
+    
+    // Replace items in the table
+    const itemsHtml = quotation.items.map(item => `
+        <tr>
+          <td>${item.description}</td>
+          <td class="center">${item.quantity}</td>
+          <td class="right">${formatCurrency(item.unitPrice)}</td>
+          <td class="right">${formatCurrency(item.total)}</td>
+        </tr>
+      `).join('')
+    
+    // Replace the table body
+    template = template.replace(
+      /<tbody>[\s\S]*?<\/tbody>/,
+      `<tbody>${itemsHtml}</tbody>`
+    )
+    
+    // Replace summary values
+    template = template.replace('6500.00', formatCurrency(quotation.subtotal))
+    template = template.replace('6500.00', formatCurrency(quotation.subtotal))
+    template = template.replace('18%', `${quotation.taxRate}%`)
+    template = template.replace('1170.00', formatCurrency(quotation.taxAmount))
+    template = template.replace('7670.00', formatCurrency(quotation.total))
+    
+    // Change INVOICE to QUOTATION
+    template = template.replace('INVOICE', 'QUOTATION')
+    template = template.replace('INVOICE #:', 'QUOTE #:')
+    template = template.replace('DUE DATE:', 'VALID UNTIL:')
+    
+    return template
+  } catch (error) {
+    console.error('Error loading template:', error)
+    // Fallback to the original generated HTML
+    return generateQuotationHTMLOptimized(quotation, companySettings, client)
+  }
+}
+
+// Generate Price Information from template
+export const generatePriceInformationFromTemplate = async (quotation: Quotation, companySettings: CompanySettings, client?: Client): Promise<string> => {
+  try {
+    // Load the price information template file
+    const response = await fetch('/price_information_template.html')
+    let template = await response.text()
+    
+    const formatDate = (date: string) => {
+      return new Date(date).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+    }
+
+    const formatCurrency = (amount: number) => {
+      const currencySymbols = {
+        RWF: "RWF",
+        USD: "$",
+        EUR: "€"
+      }
+      const symbol = currencySymbols[quotation.currency] || quotation.currency
+      
+      if (quotation.currency === "RWF") {
+        return `${symbol} ${Math.round(amount).toLocaleString()}`
+      }
+      
+      return `${symbol} ${amount.toFixed(2)}`
+    }
+
+    // Load the actual Esri logo image and convert to data URL
+    try {
+      const logoResponse = await fetch('/Esri logo.jpg')
+      const logoBlob = await logoResponse.blob()
+      const logoDataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(logoBlob)
+      })
+      // Replace any img tag with Esri logo (smaller size for single page)
+      template = template.replace(/<img[^>]*src="[^"]*Esri logo\.jpg"[^>]*>/g, `<img src="${logoDataUrl}" alt="Esri Logo" width="80" style="margin-bottom: 5px;">`)
+    } catch (error) {
+      console.error('Error loading logo:', error)
+    }
+
+    // Remove unnecessary margins and make content fill the page
+    template = template.replace(/max-width: 850px/g, 'max-width: 100%')
+    template = template.replace(/max-width: 800px/g, 'max-width: 100%')
+    template = template.replace(/margin: auto/g, 'margin: 0')
+    template = template.replace(/padding: 30px/g, 'padding: 10px')
+    template = template.replace(/padding: 40px/g, 'padding: 10px')
+    template = template.replace(/margin: 20px/g, 'margin: 5px')
+    template = template.replace(/margin: 30px/g, 'margin: 5px')
+    template = template.replace(/line-height: 1\.6/g, 'line-height: 1.3')
+    template = template.replace(/line-height: 1\.5/g, 'line-height: 1.2')
+
+    // Replace placeholders with actual data
+    template = template.replace('{{DATE}}', formatDate(quotation.createdAt))
+    template = template.replace('{{REFERENCE_NUMBER}}', quotation.quotationNumber)
+    template = template.replace('{{CUSTOMER_ID}}', quotation.clientId)
+    template = template.replace('{{VALID_UNTIL}}', formatDate(quotation.validUntil))
+    
+    // Replace customer details
+    if (client) {
+      template = template.replace('{{CLIENT_NAME}}', client.name)
+      template = template.replace('{{CLIENT_ADDRESS}}', client.address)
+      template = template.replace('{{CLIENT_PHONE}}', client.phone)
+      template = template.replace('{{CLIENT_EMAIL}}', client.email)
+    }
+    
+    // Replace items in the table
+    const itemsHtml = quotation.items.map(item => `
+        <tr>
+          <td>${item.description}</td>
+          <td class="center">${item.quantity}</td>
+          <td class="right">${formatCurrency(item.unitPrice)}</td>
+          <td class="right">${formatCurrency(item.total)}</td>
+        </tr>
+      `).join('')
+    
+    // Replace the table body
+    template = template.replace('{{ITEM_ROWS}}', itemsHtml)
+    
+    // Replace summary values
+    template = template.replace('{{SUBTOTAL}}', formatCurrency(quotation.subtotal))
+    template = template.replace('{{TAXABLE}}', formatCurrency(quotation.subtotal))
+    template = template.replace('{{TAX_RATE}}', `${quotation.taxRate}%`)
+    template = template.replace('{{TAX_AMOUNT}}', formatCurrency(quotation.taxAmount))
+    template = template.replace('{{TOTAL}}', formatCurrency(quotation.total))
+    
+    return template
+  } catch (error) {
+    console.error('Error loading price information template:', error)
+    // Fallback to the original generated HTML
+    return generateQuotationHTMLOptimized(quotation, companySettings, client)
+  }
+}
+
+// Generate Price Information PDF
+export const downloadPriceInformationPDF = async (quotation: Quotation, companySettings: CompanySettings, client?: Client): Promise<void> => {
+  const html = await generatePriceInformationFromTemplate(quotation, companySettings, client)
+
+  // Create an offscreen container to render the HTML
+  const container = document.createElement('div')
+  container.style.position = 'fixed'
+  container.style.left = '-10000px'
+  container.style.top = '0'
+  container.style.width = '210mm'
+  container.style.height = '297mm' // A4 height
+  container.style.background = '#ffffff'
+  container.style.overflow = 'hidden' // Prevent content from extending beyond page
+  container.innerHTML = html
+  document.body.appendChild(container)
+
+  try {
+    const target = container.querySelector('.invoice-container') as HTMLElement | null
+    if (!target) throw new Error('Price information container not found')
+
+    // Optimize the container for single page - fill entire page
+    target.style.height = '297mm'
+    target.style.overflow = 'hidden'
+    target.style.padding = '5mm' // Minimal padding
+    target.style.width = '100%' // Fill entire width
+    target.style.margin = '0' // Remove all margins
+
+    const { default: html2canvas } = await import('html2canvas')
+    const canvas = await html2canvas(target, { 
+      scale: 1.5, // Reduced scale for better fit
+      useCORS: true, 
+      allowTaint: true, 
+      backgroundColor: '#ffffff',
+      width: 794, // A4 width in pixels at 96 DPI
+      height: 1123, // A4 height in pixels at 96 DPI
+      scrollX: 0,
+      scrollY: 0
+    })
+
+    const imgData = canvas.toDataURL('image/png')
+    const doc = new jsPDF('p', 'mm', 'a4')
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    
+    // Add single page with the image
+    doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight)
+
+    doc.save(`price-information-${quotation.quotationNumber}.pdf`)
+  } finally {
+    document.body.removeChild(container)
+  }
+}
+
+export const downloadInvoiceHTML = async (quotation: Quotation, companySettings: CompanySettings, client?: Client): Promise<void> => {
+  const htmlContent = await generateInvoiceFromTemplate(quotation, companySettings, client)
   const blob = new Blob([htmlContent], { type: 'text/html' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -1140,9 +1502,9 @@ export const downloadInvoiceHTML = (quotation: Quotation, companySettings: Compa
   URL.revokeObjectURL(url)
 }
 
-// Generate Invoice PDF using the styled HTML with embedded Esri logo
+// Generate Invoice PDF using the template with embedded Esri logo
 export const downloadInvoicePDF = async (quotation: Quotation, companySettings: CompanySettings, client?: Client): Promise<void> => {
-  const html = generateInvoiceHTMLOptimized(quotation, companySettings, client)
+  const html = await generateInvoiceFromTemplate(quotation, companySettings, client)
 
   // Create an offscreen container to render the HTML
   const container = document.createElement('div')
@@ -1150,7 +1512,9 @@ export const downloadInvoicePDF = async (quotation: Quotation, companySettings: 
   container.style.left = '-10000px'
   container.style.top = '0'
   container.style.width = '210mm'
+  container.style.height = '297mm' // A4 height
   container.style.background = '#ffffff'
+  container.style.overflow = 'hidden' // Prevent content from extending beyond page
   container.innerHTML = html
   document.body.appendChild(container)
 
@@ -1158,28 +1522,32 @@ export const downloadInvoicePDF = async (quotation: Quotation, companySettings: 
     const target = container.querySelector('.invoice-container') as HTMLElement | null
     if (!target) throw new Error('Invoice container not found')
 
+    // Optimize the container for single page - fill entire page
+    target.style.height = '297mm'
+    target.style.overflow = 'hidden'
+    target.style.padding = '5mm' // Minimal padding
+    target.style.width = '100%' // Fill entire width
+    target.style.margin = '0' // Remove all margins
+
     const { default: html2canvas } = await import('html2canvas')
-    const canvas = await html2canvas(target, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff' })
+    const canvas = await html2canvas(target, { 
+      scale: 1.5, // Reduced scale for better fit
+      useCORS: true, 
+      allowTaint: true, 
+      backgroundColor: '#ffffff',
+      width: 794, // A4 width in pixels at 96 DPI
+      height: 1123, // A4 height in pixels at 96 DPI
+      scrollX: 0,
+      scrollY: 0
+    })
 
     const imgData = canvas.toDataURL('image/png')
     const doc = new jsPDF('p', 'mm', 'a4')
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
-    const imgWidth = pageWidth
-    const imgHeight = (canvas.height * pageWidth) / canvas.width
-
-    let heightLeft = imgHeight
-    let position = 0
-
-    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-    heightLeft -= pageHeight
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight
-      doc.addPage()
-      doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight
-    }
+    
+    // Add single page with the image
+    doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight)
 
     doc.save(`invoice-${quotation.quotationNumber}.pdf`)
   } finally {
@@ -1189,8 +1557,8 @@ export const downloadInvoicePDF = async (quotation: Quotation, companySettings: 
 
 export const downloadQuotationPDF = async (quotation: Quotation, companySettings: CompanySettings, client?: Client): Promise<void> => {
   try {
-    // Generate optimized HTML content for single page PDF
-    const htmlContent = generateQuotationHTMLOptimized(quotation, companySettings, client)
+    // Generate HTML content using the same template approach as invoice
+    const htmlContent = await generateQuotationFromTemplate(quotation, companySettings, client)
     
     // Create a temporary container
     const tempContainer = document.createElement('div')
@@ -1399,7 +1767,7 @@ generating ${formatCurrency(analytics.totalRevenue)} in total revenue across ${f
 
   if (analytics.inactiveClients.length > 0) {
     yPosition += 5
-    yPosition = addText(`Inactive Clients (no activity in 6+ months):`, margin, yPosition)
+  yPosition = addText(`Inactive Clients (no activity in 6+ months):`, margin, yPosition)
     analytics.inactiveClients.forEach((client) => {
       yPosition = addText(`  • ${client.name} (${client.company})`, margin + 10, yPosition)
     })

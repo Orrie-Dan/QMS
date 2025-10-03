@@ -1,13 +1,16 @@
 import { Link } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { getClients as apiGetClients, deleteClient as apiDeleteClient, type UIClient } from "../lib/api"
+import { generateClientsExcel } from "../lib/excelUtils"
+import { useStore } from "../lib/store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Mail, Phone, MapPin, Edit, Trash2 } from "lucide-react"
+import { Plus, Mail, Phone, MapPin, Edit, Trash2, FileText } from "lucide-react"
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<UIClient[]>([])
+  const quotations = useStore((state) => state.quotations)
   const loadClients = () => apiGetClients().then(setClients).catch(console.error)
   useEffect(() => { loadClients() }, [])
   useEffect(() => {
@@ -33,6 +36,16 @@ export default function ClientsPage() {
     }
   }
 
+  const handleExportExcel = () => {
+    try {
+      const filename = generateClientsExcel(clients, quotations)
+      alert(`Clients exported successfully as: ${filename}`)
+    } catch (error) {
+      console.error('Error exporting clients:', error)
+      alert('Failed to export clients. Please try again.')
+    }
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -41,12 +54,18 @@ export default function ClientsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
           <p className="text-gray-600">Manage your client relationships</p>
         </div>
-        <Link to="/clients/new">
-          <Button className="flex items-center">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Client
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportExcel}>
+            <FileText className="h-4 w-4 mr-2" />
+            Export Excel
           </Button>
-        </Link>
+          <Link to="/clients/new">
+            <Button className="flex items-center">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Client
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
